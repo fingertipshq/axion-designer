@@ -31,7 +31,7 @@ Most AI UI workflows end after code generation. `Axion Designer` continues throu
 
 Run `npm run demo` to reproduce the CLI proof in a temporary workspace. It introduces one exact token violation, captures the failing reports, applies the SSOT-backed repair, and proves the source returns byte-for-byte to a passing state. The evidence bundle is written to `output/market-demo/`.
 
-## Local quick start
+## Quick start
 
 There are three dependency layers:
 
@@ -44,24 +44,23 @@ npm i -D stylelint stylelint-declaration-strict-value@1.10.6 postcss-html @playw
 npx playwright install chromium
 ```
 
-When developing from this repository before the public installation source exists, call the repository runtime directly:
+Install from npm and run everything through the project-local runtime:
 
 ```bash
-# From this repository
-node bin/dk.mjs --help
-node bin/dk.mjs codex status
-node bin/dk.mjs codex context
-node bin/dk.mjs codex prompt auto
+# In an existing frontend repository
+npm i -D axion-designer
+npx --no-install dk verify
 
-# Start a new governed UI workspace without a global link
-node bin/dk.mjs new my-interface
+# Or start a new governed UI workspace
+npx --package=axion-designer dk new my-interface
 cd my-interface
-npm i -D /absolute/path/to/axion-designer
-npx --no-install dk codex init
+npm i -D axion-designer
+npx --no-install dk codex init    # Codex CLI / Codex app host
+npx --no-install dk claude init   # Claude Code host
 npx --no-install dk design init
 ```
 
-For an existing target repository, add this source checkout as a project-local development dependency with `npm i -D /absolute/path/to/axion-designer`, run `npx --no-install dk codex init`, then confirm `npx --no-install dk codex status` reports `ready`. Keeping the runtime in the target repository lets the copied skill preflight resolve the matching package. Open that repository in Codex CLI or the Codex app and invoke the skill explicitly:
+For an existing target repository, add the project-local development dependency with `npm i -D axion-designer`, run `npx --no-install dk codex init` (or `dk claude init`), then confirm `npx --no-install dk codex status` reports `ready`. Keeping the runtime in the target repository lets the copied skill preflight resolve the matching package. (Developing from a source checkout instead? Use `node bin/dk.mjs …` and `npm i -D /absolute/path/to/axion-designer`.) Open that repository in Codex CLI or the Codex app and invoke the skill explicitly:
 
 ```text
 Use $dk-design to design this product interface, inspect the rendered desktop

@@ -31,7 +31,7 @@
 
 執行 `npm run demo` 可以重現 CLI 證明：它會在暫存工作區注入一個精確的 token 違規，保存失敗報告，套用唯一可確定的 SSOT 修正，最後證明原始碼逐 byte 回到通過狀態。證據包會寫入 `output/market-demo/`。
 
-## 本機快速開始
+## 快速開始
 
 依賴分成三層：
 
@@ -44,24 +44,23 @@ npm i -D stylelint stylelint-declaration-strict-value@1.10.6 postcss-html @playw
 npx playwright install chromium
 ```
 
-公開安裝來源建立前，直接呼叫這個 repository 的 runtime：
+從 npm 安裝，一切都走專案層 runtime：
 
 ```bash
-# 在本 repository 內
-node bin/dk.mjs --help
-node bin/dk.mjs codex status
-node bin/dk.mjs codex context
-node bin/dk.mjs codex prompt auto
+# 在既有前端 repository 內
+npm i -D axion-designer
+npx --no-install dk verify
 
-# 不建立全域連結，直接建立受治理的新 UI 工作區
-node bin/dk.mjs new my-interface
+# 或直接建立受治理的新 UI 工作區
+npx --package=axion-designer dk new my-interface
 cd my-interface
-npm i -D /absolute/path/to/axion-designer
-npx --no-install dk codex init
+npm i -D axion-designer
+npx --no-install dk codex init    # Codex CLI／桌面版
+npx --no-install dk claude init   # Claude Code
 npx --no-install dk design init
 ```
 
-既有專案請先在目標 repository 以 `npm i -D /absolute/path/to/axion-designer` 建立專案層開發依賴，再執行 `npx --no-install dk codex init`，並確認 `npx --no-install dk codex status` 顯示 `ready`。把 runtime 留在目標 repository 內，複製後的 skill preflight 才能解析同版本 package。接著用 Codex CLI 或 Codex 桌面版開啟該 repository，並明確呼叫：
+既有專案請先在目標 repository 以 `npm i -D axion-designer` 建立專案層開發依賴，再執行 `npx --no-install dk codex init`（或 `dk claude init`），並確認 `npx --no-install dk codex status` 顯示 `ready`。把 runtime 留在目標 repository 內，複製後的 skill preflight 才能解析同版本 package。（要從原始碼 checkout 開發？改用 `node bin/dk.mjs …` 與 `npm i -D /absolute/path/to/axion-designer`。）接著用 Codex CLI 或 Codex 桌面版開啟該 repository，並明確呼叫：
 
 ```text
 使用 $dk-design 設計這個產品介面，查看實際渲染的桌面與手機畫面，

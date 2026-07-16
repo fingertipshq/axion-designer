@@ -5,7 +5,7 @@ Axion Designer ships the same explicit-only design skill for two agent hosts. `s
 ## Install into a repository
 
 ```bash
-npm i -D axion-designer        # or a path to a source checkout while unpublished
+npm i -D axion-designer
 npx --no-install dk claude init
 npx --no-install dk claude status
 ```
