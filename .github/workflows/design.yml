@@ -1,0 +1,118 @@
+name: design-verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  codex-compatibility:
+    name: Codex compatibility (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18.14.1', '20', '22']
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - name: Install locked dependencies without browser runtimes
+        run: npm ci
+      - name: Verify Codex package, policy, and MCP compatibility
+        run: |
+          npm run test:codex
+          node tests/mcp-server.mjs
+
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Verify zero-dependency core
+        run: |
+          node bin/dk.mjs verify --json --out output/ci/core.json
+          node bin/dk.mjs report --html --out output/ci/core.html
+          node bin/dk.mjs report --sarif --out output/ci/core.sarif
+
+      - name: Run zero-dependency regression suite
+        run: node tests/self-test.mjs
+
+      - name: Verify approved direction and append-only decision history
+        run: |
+          node bin/dk.mjs design check
+          node bin/dk.mjs design history --json > output/ci/approval-history-check.json
+          test -s design/approval-history.json
+
+      - name: Install locked dependencies and Chromium
+        run: npm ci && npx playwright install --with-deps chromium
+
+      - name: Run complete regression suite
+        run: npm test
+
+      - name: Run P0 gate and report checks
+        run: node tests/p0-gates.mjs
+
+      - name: Run P3 governance and ten-round drift proof
+        run: npm run test:p3 && npm run benchmark:p3
+
+      - name: Verify strict CSS gate
+        run: |
+          node bin/dk.mjs verify --gate css-strict --require-gates --json --out output/ci/css-strict.json
+          node bin/dk.mjs report --html --out output/ci/css-strict.html
+          node bin/dk.mjs report --sarif --out output/ci/css-strict.sarif
+
+      - name: Verify accessibility gate
+        run: |
+          node bin/dk.mjs verify --gate a11y --require-gates --json --out output/ci/a11y.json
+          node bin/dk.mjs report --html --out output/ci/a11y.html
+          node bin/dk.mjs report --sarif --out output/ci/a11y.sarif
+
+      # This creates a review candidate only. It is intentionally NOT passed to
+      # `dk verify --gate visual`: comparing against a snapshot made from the
+      # same commit would be a false regression proof. Product repositories
+      # should restore a human-approved baseline from version control or a
+      # fixed-OS artifact before invoking the visual gate.
+      - name: Capture visual review candidate (not a baseline comparison)
+        env:
+          DK_VISUAL_MATRIX: '{"viewports":[375,1024],"themes":["light","dark"]}'
+        run: npx playwright test gates/visual.spec.mjs --update-snapshots
+
+      - name: Upload design review evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: axion-design-evidence
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            output/ci/core.json
+            output/ci/core.html
+            output/ci/core.sarif
+            output/ci/css-strict.json
+            output/ci/css-strict.html
+            output/ci/css-strict.sarif
+            output/ci/a11y.json
+            output/ci/a11y.html
+            output/ci/a11y.sarif
+            .dk/report.json
+            design/approval-history.json
+            output/ci/approval-history-check.json
+            output/p3-benchmark/report.json
+            output/p3-benchmark/report.html
+            output/p3-benchmark/checksums.json
+            gates/visual.spec.mjs-snapshots/

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Axion Studio</title>
+  <link rel="stylesheet" href="/_studio/app.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail" aria-label="Studio navigation">
+      <a class="brand" href="#overview" aria-label="Axion Studio home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i></span>
+        <span><strong>AXION</strong><small>STUDIO / LOCAL</small></span>
+      </a>
+      <nav class="nav">
+        <button class="nav-item is-active" data-view="overview"><span>01</span>Overview</button>
+        <button class="nav-item" data-view="direction"><span>02</span>Direction</button>
+        <button class="nav-item" data-view="proof"><span>03</span>Proof</button>
+        <button class="nav-item" data-view="system"><span>04</span>System graph</button>
+        <button class="nav-item" data-view="reference"><span>05</span>Reference</button>
+        <button class="nav-item" data-view="preview"><span>06</span>Live preview</button>
+        <button class="nav-item" data-view="changes"><span>07</span>Changes</button>
+        <button class="nav-item" data-view="connections"><span>08</span>Connections</button>
+      </nav>
+      <div class="rail-foot">
+        <div class="health-dot" id="health-dot"></div>
+        <div><strong id="health-label">Indexing repository</strong><small id="health-meta">Read-only local session</small></div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="project-crumb">
+          <span class="eyebrow">PROJECT</span>
+          <strong id="project-name">Loading…</strong>
+          <span id="project-root" title=""></span>
+        </div>
+        <div class="top-actions">
+          <span class="sync-state" id="sync-state"><i></i> Reading evidence</span>
+          <button class="icon-button" id="refresh-button" title="Refresh repository evidence" aria-label="Refresh repository evidence">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="view is-active" id="view-overview" aria-labelledby="overview-title">
+        <div class="view-head">
+          <div><span class="eyebrow">CONTROL SURFACE / 01</span><h1 id="overview-title">Design integrity at a glance.</h1></div>
+          <p>The approved direction, implementation evidence, and system relationships—read from the repository that ships.</p>
+        </div>
+        <div class="metric-grid" id="overview-metrics"></div>
+        <div class="dashboard-grid">
+          <article class="panel panel-large" id="taste-overview"></article>
+          <article class="panel" id="gate-overview"></article>
+          <article class="panel" id="proof-overview"></article>
+          <article class="panel panel-large" id="finding-overview"></article>
+        </div>
+      </section>
+
+      <section class="view" id="view-direction" aria-labelledby="direction-title">
+        <div class="view-head">
+          <div><span class="eyebrow">ART DIRECTION / 02</span><h1 id="direction-title">Intent that survives implementation.</h1></div>
+          <p>Identity and semantic bindings are fingerprinted separately, so content can evolve without silently changing the product's character.</p>
+        </div>
+        <div id="direction-content" class="direction-layout"></div>
+      </section>
+
+      <section class="view" id="view-proof" aria-labelledby="proof-title">
+        <div class="view-head">
+          <div><span class="eyebrow">EVIDENCE LEDGER / 03</span><h1 id="proof-title">Routes, states, and gates.</h1></div>
+          <p>Discovered surfaces stay distinct from proven ones. A skipped requested gate never masquerades as a pass.</p>
+        </div>
+        <div class="proof-summary" id="proof-metrics"></div>
+        <div class="split-layout">
+          <article class="panel route-panel"><div class="panel-heading"><div><span class="eyebrow">ROUTE COVERAGE</span><h2>Rendered surfaces</h2></div></div><div id="route-list"></div></article>
+          <article class="panel"><div class="panel-heading"><div><span class="eyebrow">LEDGER</span><h2>Gate execution</h2></div></div><div id="gate-list"></div></article>
+        </div>
+        <article class="panel finding-panel"><div class="panel-heading"><div><span class="eyebrow">FINDINGS</span><h2>Actionable evidence</h2></div><select id="finding-filter" aria-label="Filter findings"><option value="all">All severities</option><option value="error">Errors</option><option value="warn">Warnings</option><option value="info">Info</option></select></div><div id="finding-list"></div></article>
+      </section>
+
+      <section class="view view-system" id="view-system" aria-labelledby="system-title">
+        <div class="view-head compact">
+          <div><span class="eyebrow">SYSTEM GRAPH / 04</span><h1 id="system-title">The code behind the interface.</h1></div>
+          <p>Components, stories, routes, and tokens are indexed from source. Every node retains file and line evidence.</p>
+        </div>
+        <div class="graph-toolbar">
+          <label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="graph-search" type="search" placeholder="Find component, route, or token…"></label>
+          <div class="segmented" id="graph-filters" aria-label="Graph node filters">
+            <button class="is-active" data-kind="all">All</button><button data-kind="component">Components</button><button data-kind="token">Tokens</button><button data-kind="story">Stories</button><button data-kind="route">Routes</button>
+          </div>
+          <span class="graph-count" id="graph-count"></span>
+        </div>
+        <div class="graph-workspace">
+          <div class="graph-stage" role="group" aria-label="Repository system graph"><svg id="system-graph"></svg><div class="graph-legend" aria-hidden="true"><span><i class="route"></i>Route</span><span><i class="component"></i>Component</span><span><i class="story"></i>Story</span><span><i class="token"></i>Token</span></div></div>
+          <aside class="node-inspector" id="node-inspector" tabindex="0" aria-label="Selected graph node details"><div class="empty-inspector"><span>SELECT A NODE</span><p>Inspect source evidence, relationships, and token values.</p></div></aside>
+        </div>
+      </section>
+
+      <section class="view view-reference" id="view-reference" aria-labelledby="reference-title">
+        <div class="view-head compact">
+          <div><span class="eyebrow">REFERENCE LAB / 05</span><h1 id="reference-title">Compare the intent. Repair the exact scope.</h1></div>
+          <p>Only validated, digest-bound reference artifacts are shown. Studio can prepare a bounded Codex request, but never edits source or invokes Codex.</p>
+        </div>
+        <div id="reference-content" aria-live="polite">
+          <article class="panel reference-empty"><div class="empty-state"><div><strong>Reading reference evidence</strong>Validated comparison artifacts will appear here.</div></div></article>
+        </div>
+      </section>
+
+      <section class="view view-preview" id="view-preview" aria-labelledby="preview-title">
+        <div class="view-head compact">
+          <div><span class="eyebrow">LIVE PREVIEW / 06</span><h1 id="preview-title">See the implementation. Inspect the cause.</h1></div>
+          <p>Local HTML previews run in an opaque sandbox with a nonce-bound inspector bridge. External URLs remain viewable but cannot expose their DOM.</p>
+        </div>
+        <div class="preview-toolbar">
+          <select id="preview-select" aria-label="Select local preview"></select>
+          <label class="url-field"><span>URL</span><input id="preview-url" type="url" placeholder="Or enter http://localhost:3000"></label>
+          <button class="button secondary" id="preview-open">Open</button>
+          <div class="segmented viewport-switcher" aria-label="Preview viewport">
+            <button data-width="390">Mobile</button><button data-width="768">Tablet</button><button class="is-active" data-width="0">Fluid</button>
+          </div>
+          <button class="button inspector-toggle" id="inspector-toggle" aria-pressed="false"><i></i>Inspect DOM</button>
+          <button class="icon-button" id="preview-reload" title="Reload preview" aria-label="Reload preview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg></button>
+        </div>
+        <div class="preview-layout">
+          <div class="device-stage"><div class="browser-frame" id="browser-frame"><div class="browser-chrome"><span></span><span></span><span></span><div id="browser-location">No preview selected</div></div><iframe id="preview-frame" title="Axion live preview" sandbox="allow-scripts allow-forms" referrerpolicy="no-referrer"></iframe></div></div>
+          <aside class="dom-panel" id="dom-panel" tabindex="0" aria-label="DOM inspector details"><div class="empty-inspector"><span>DOM INSPECTOR</span><p>Enable inspection, then select an element in the preview to reveal selector, component, box, and token clues.</p></div></aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-changes" aria-labelledby="changes-title">
+        <div class="view-head">
+          <div><span class="eyebrow">CHANGE SURFACE / 07</span><h1 id="changes-title">What changed around the design.</h1></div>
+          <p>Git remains the source of history. Studio condenses the active branch and design-relevant diff surface without modifying it.</p>
+        </div>
+        <div class="proof-summary" id="git-metrics"></div>
+        <article class="panel approval-panel" id="approval-changes"></article>
+        <article class="panel"><div class="panel-heading"><div><span class="eyebrow">WORKTREE</span><h2 id="git-heading">Changed files</h2></div><span class="mono" id="git-head"></span></div><div id="git-files"></div></article>
+      </section>
+
+      <section class="view" id="view-connections" aria-labelledby="connections-title">
+        <div class="view-head">
+          <div><span class="eyebrow">AXION BRIDGE / 08</span><h1 id="connections-title">Evidence across the toolchain.</h1></div>
+          <p>External evidence stays bound to provider, commit, freshness, permissions, and trust. A linked result never silently becomes an Axion approval.</p>
+        </div>
+        <div class="proof-summary" id="bridge-metrics"></div>
+        <div class="connections-layout">
+          <article class="panel connection-panel">
+            <div class="panel-heading"><div><span class="eyebrow">CONNECTIONS</span><h2>Provider health</h2></div><span class="badge" id="bridge-ledger-state">not synced</span></div>
+            <div id="connection-list"></div>
+          </article>
+          <aside class="connections-side">
+            <article class="panel" id="bridge-trust-panel"></article>
+            <article class="panel" id="bridge-security-panel"></article>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/_studio/app.js"></script>
+</body>
+</html>

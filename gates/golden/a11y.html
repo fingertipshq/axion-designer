@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Accessibility negative fixture</title>
+</head>
+<body>
+  <!-- image-alt：互動/內容元素缺可及名稱（axe impact critical → error） -->
+  <img src="logo.png">
+  <!-- button-name：按鈕無可辨識文字 -->
+  <button></button>
+  <!-- color-contrast：#ccc 於 #fff、14px 約 1.6:1，低於 AA 4.5:1。 -->
+  <p style="color:#cccccc; background:#ffffff; font-size:14px">對比不足的文字</p>
+</body>
+</html>

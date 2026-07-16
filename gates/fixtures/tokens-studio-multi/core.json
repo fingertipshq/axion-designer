@@ -1,0 +1,9 @@
+{
+  "color": {
+    "brand": { "value": "#0071e3", "type": "color" },
+    "ink":   { "value": "#1d1d1f", "type": "color" }
+  },
+  "space": {
+    "md": { "value": "16px", "type": "spacing" }
+  }
+}

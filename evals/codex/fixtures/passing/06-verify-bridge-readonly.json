@@ -1,0 +1,31 @@
+{
+  "schema": "axion-codex-trace/v1",
+  "caseId": "verify-bridge-readonly",
+  "activation": "explicit",
+  "lane": "verify",
+  "workspace": "/workspace/project",
+  "commands": [
+    {
+      "command": "node /plugin/skills/dk-design/scripts/preflight.mjs --cwd /workspace/project",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs bridge doctor",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs bridge status",
+      "exitCode": 0
+    }
+  ],
+  "writes": [],
+  "mutations": [],
+  "evidence": [
+    {
+      "kind": "bridge",
+      "status": "passed",
+      "artifact": ".dk/bridge/ledger.json"
+    }
+  ],
+  "finalStatus": "passed"
+}

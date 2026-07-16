@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Axion Designer Starter</title>
+  <!-- styles/tokens.css 由 design/tokens.json 編譯；設計變更應修改 token source 後執行 `dk build`。 -->
+  <link rel="stylesheet" href="styles/tokens.css">
+  <style>
+    /* 此起始頁只使用 semantic tokens，不含寫死的設計值；可直接替換為產品內容。 */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font-family-base);
+      color: var(--color-text-primary);
+      background: var(--color-surface-page);
+      line-height: var(--font-leading-normal);
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    :focus-visible { outline: 2px solid var(--color-brand-accent); outline-offset: 3px; border-radius: var(--radius-sm); }
+
+    nav { border-bottom: 1px solid var(--color-border-subtle); }
+    .nav-in { display: flex; align-items: center; justify-content: space-between; height: 56px; max-width: 960px; margin: 0 auto; padding: 0 var(--space-6); }
+    .brand { font-weight: var(--font-weight-semibold); letter-spacing: var(--font-tracking-tight); }
+    .cta { background: var(--color-brand-accent); color: var(--color-text-on-accent); padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); }
+
+    main { max-width: 960px; margin: 0 auto; padding: var(--space-20) var(--space-6) var(--space-12); }
+    h1 { font-size: var(--font-size-3xl); letter-spacing: var(--font-tracking-tight); line-height: var(--font-leading-tight); font-weight: var(--font-weight-semibold); max-width: 20ch; margin: 0 0 var(--space-5); }
+    .lede { font-size: var(--font-size-lg); color: var(--color-text-secondary); max-width: 52ch; margin: 0 0 var(--space-8); }
+    .actions { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+    .btn { padding: var(--space-3) var(--space-6); border-radius: var(--radius-pill); font-weight: var(--font-weight-medium); }
+    .btn-primary { background: var(--color-brand-accent); color: var(--color-text-on-accent); }
+    .btn-secondary { border: 1px solid var(--color-border-default); color: var(--color-text-primary); }
+
+    .steps { margin-top: var(--space-16); display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .step { background: var(--color-surface-raised); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: var(--space-5); }
+    .step h2 { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); margin: 0 0 var(--space-2); }
+    .step p { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .step code { font-family: var(--font-family-mono); color: var(--color-text-primary); }
+
+    footer { border-top: 1px solid var(--color-border-subtle); margin-top: var(--space-20); padding: var(--space-10) var(--space-6); color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+    .foot-in { max-width: 960px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-in">
+      <a class="brand" href="#top">我的專案</a>
+      <a class="cta" href="#start">開始</a>
+    </div>
+  </nav>
+
+  <main id="top">
+    <h1>從一份音準正確的畫布開始</h1>
+    <p class="lede">這頁的每個顏色、間距、字級都來自你的 tokens.json。把它換成你要做的頁面——只要你用 token、不寫死值，這條鏈就會替你守住一致性、可存取、可換膚。</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="#start">開始編輯</a>
+      <a class="btn btn-secondary" href="#next">下一步</a>
+    </div>
+
+    <section class="steps" id="next" aria-label="下一步">
+      <div class="step">
+        <h2>1 · 改你的品牌</h2>
+        <p>編輯 <code>design/tokens.json</code>，然後跑 <code>dk build</code> 重編 CSS 變數。</p>
+      </div>
+      <div class="step">
+        <h2>2 · 建你的頁面</h2>
+        <p>把這頁換成你的內容。顏色/間距/字級一律寫 <code>var(--token)</code>。</p>
+      </div>
+      <div class="step">
+        <h2>3 · 讓鏈把關</h2>
+        <p>跑 <code>dk verify</code>；紅字會精確指到行號並告訴你怎麼修。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="foot-in">
+      <span id="start">由 Axion Designer 起手 · 這頁通過核心關卡 · 執行 dk verify 驗證</span>
+    </div>
+  </footer>
+</body>
+</html>

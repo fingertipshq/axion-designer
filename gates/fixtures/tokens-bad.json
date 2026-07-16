@@ -1,0 +1,32 @@
+{
+  "$schema": "https://design-tokens.org/tr/2025.10/format",
+  "$description": "Negative token fixture. Each invalid value or missing token maps to an expected contract finding.",
+
+  "color": {
+    "$type": "color",
+    "text": {
+      "primary":   { "$value": "#999999" },
+      "secondary": { "$value": "#6e6e73" },
+      "on-accent": { "$value": "#ffffff" }
+    },
+    "surface": {
+      "page": { "$value": "#ffffff" }
+    },
+    "brand": {
+      "accent": { "$value": "#0071e3" },
+      "badNameKey": { "$value": "#0071e3" }
+    },
+    "state": {
+      "positive": { "$value": "#1d9e63" }
+    }
+  },
+
+  "space": { "$type": "dimension", "4": { "$value": "16px" } },
+  "radius": { "$type": "dimension", "md": { "$value": "" } },
+  "shadow": { "card": { "$value": "0 4px 24px rgba(0,0,0,0.06)" } },
+
+  "font": {
+    "family": { "$type": "fontFamily", "base": { "$value": "system-ui, sans-serif" } },
+    "size":   { "$type": "dimension",  "base": { "$value": "1rem" } }
+  }
+}

@@ -1,0 +1,15 @@
+# dk 的 run 帳本、baseline、resolved tokens（可重生，不需版控）
+.dk/
+
+# 常見產物 / 相依
+node_modules/
+dist/
+build/
+
+# 選配重關卡（playwright）產物
+test-results/
+playwright-report/
+
+# 視覺回歸截圖 baseline：跨平台渲染不一致，絕不 commit（各機器 DK_UPDATE_VISUAL=1 自建）。
+# tokenHash sidecar 在 .dk/（上面已忽略）。見 gates/visual.spec.mjs 與 docs/visual-regression.md。
+*-snapshots/

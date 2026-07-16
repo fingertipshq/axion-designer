@@ -1,0 +1,11 @@
+/* Negative CSS fixture：整個檔案是 style zone，包含寫死 hex、預設字型與紫／靛漸層。 */
+.hero {
+  color: #ff00aa;                                   /* hardcoded-color */
+  font-family: Inter, sans-serif;                   /* ai-font */
+  background: linear-gradient(135deg, purple, indigo); /* gradient-hero（紫/靛）*/
+}
+
+.cta {
+  background: #0071e3;   /* hardcoded-color（#0071e3 其實是 color-brand-accent）*/
+  color: #ffffff;        /* hardcoded-color */
+}

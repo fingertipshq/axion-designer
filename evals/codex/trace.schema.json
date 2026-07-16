@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unpkg.com/axion-designer/evals/codex/trace.schema.json",
+  "title": "Axion Designer Codex evaluation trace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "caseId",
+    "activation",
+    "lane",
+    "workspace",
+    "commands",
+    "writes",
+    "mutations",
+    "evidence",
+    "finalStatus"
+  ],
+  "properties": {
+    "schema": {
+      "const": "axion-codex-trace/v1"
+    },
+    "caseId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "activation": {
+      "enum": [
+        "explicit",
+        "implicit"
+      ]
+    },
+    "lane": {
+      "enum": [
+        "refine",
+        "explore",
+        "reconstruct",
+        "reimagine",
+        "verify"
+      ]
+    },
+    "workspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command",
+          "exitCode"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "exitCode": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "writes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "kind"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "create",
+              "update",
+              "delete"
+            ]
+          }
+        }
+      }
+    },
+    "mutations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "summary"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "source",
+              "generated-evidence",
+              "lock-accept",
+              "baseline-accept",
+              "policy-change",
+              "bridge-publish",
+              "global-write"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "status"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "verify",
+              "visual",
+              "reference",
+              "app-proof",
+              "bridge",
+              "lock",
+              "other"
+            ]
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "incomplete",
+              "failed",
+              "missing"
+            ]
+          },
+          "artifact": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "finalStatus": {
+      "enum": [
+        "passed",
+        "incomplete",
+        "failed",
+        "blocked"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

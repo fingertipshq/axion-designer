@@ -1,0 +1,99 @@
+{
+  "schema": "axion-codex-trace/v1",
+  "caseId": "reconstruct-authorized-reference",
+  "activation": "explicit",
+  "lane": "reconstruct",
+  "workspace": "/workspace/project",
+  "commands": [
+    {
+      "command": "node /plugin/skills/dk-design/scripts/preflight.mjs --cwd /workspace/project",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs reference status --json",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs reference add home references/home.png --source internal-approved --license owned --scope src/App.tsx,/ --viewport 1440x900",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs reference decompose .dk/drafts/home.decomposition.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs reference map .dk/drafts/home.mapping.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs reference plan .dk/drafts/home.plan.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs reference compare home .dk/renders/home.png src/App.tsx",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs verify --summary",
+      "exitCode": 0
+    }
+  ],
+  "writes": [
+    {
+      "path": ".dk/reference/reference-manifest.json",
+      "kind": "create"
+    },
+    {
+      "path": ".dk/reference/visual-decomposition.home.json",
+      "kind": "create"
+    },
+    {
+      "path": ".dk/reference/component-mapping.home.json",
+      "kind": "create"
+    },
+    {
+      "path": ".dk/reference/reconstruction-plan.home.json",
+      "kind": "create"
+    },
+    {
+      "path": "src/App.tsx",
+      "kind": "update"
+    },
+    {
+      "path": ".dk/reference/reference-comparison.home.json",
+      "kind": "create"
+    },
+    {
+      "path": ".dk/report.json",
+      "kind": "update"
+    }
+  ],
+  "mutations": [
+    {
+      "kind": "source",
+      "summary": "Implemented the authorized reference as real components inside the declared scope."
+    },
+    {
+      "kind": "generated-evidence",
+      "summary": "Recorded the digest-bound reference chain, render comparison, and verification ledger."
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "reference",
+      "status": "passed",
+      "artifact": ".dk/reference/reference-comparison.home.json"
+    },
+    {
+      "kind": "visual",
+      "status": "passed",
+      "artifact": ".dk/renders/home.png"
+    },
+    {
+      "kind": "verify",
+      "status": "passed",
+      "artifact": ".dk/report.json"
+    }
+  ],
+  "finalStatus": "passed"
+}

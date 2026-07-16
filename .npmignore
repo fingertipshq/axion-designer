@@ -1,0 +1,25 @@
+# package.json `files` is the primary publish allowlist. These patterns keep
+# development state out if that list is broadened later.
+/tests/
+/gates/
+/design/
+/styles/
+/.dk/
+/.github/
+/node_modules/
+/test-results/
+/playwright-report/
+/dk.config.mjs
+/playwright.config.mjs
+/.stylelintrc.json
+
+.DS_Store
+.playwright-cli/
+*-snapshots/
+*.log
+
+# Repository-only proof artifacts are linked from the docs, not shipped in the
+# executable npm package.
+/showcase/
+/output/
+/promo/

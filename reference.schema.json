@@ -1,0 +1,620 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unpkg.com/axion-designer/reference.schema.json",
+  "title": "Axion Reference-to-Code Evidence",
+  "description": "Versioned, project-bound evidence for registered visual references, Codex-authored reconstruction analysis, and mechanical comparison.",
+  "oneOf": [
+    { "$ref": "#/$defs/referenceManifest" },
+    { "$ref": "#/$defs/visualDecomposition" },
+    { "$ref": "#/$defs/componentMapping" },
+    { "$ref": "#/$defs/reconstructionPlan" },
+    { "$ref": "#/$defs/referenceComparison" }
+  ],
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "sha256Prefix16": { "type": "string", "pattern": "^[a-f0-9]{16}$" },
+    "safeId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$" },
+    "nonempty": { "type": "string", "minLength": 1 },
+    "nullableString": { "type": ["string", "null"], "minLength": 1 },
+    "projectPath": {
+      "type": "string",
+      "minLength": 1,
+      "not": { "pattern": "^(?:/|[A-Za-z]:|\\.\\.(?:/|$)|.*[/\\\\]\\.\\.(?:[/\\\\]|$))" }
+    },
+    "common": {
+      "type": "object",
+      "required": ["kind", "artifactId", "createdAt", "projectRootSha256"],
+      "properties": {
+        "kind": { "type": "string" },
+        "artifactId": { "$ref": "#/$defs/safeId" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "projectRootSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "artifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/projectPath" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "author": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name", "model"],
+      "properties": {
+        "type": { "enum": ["human", "codex", "tool"] },
+        "name": { "$ref": "#/$defs/nullableString" },
+        "model": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "deviceScaleFactor"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "deviceScaleFactor": { "type": "number", "minimum": 0.1, "maximum": 8 }
+      }
+    },
+    "namedViewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "width", "height", "deviceScaleFactor"],
+      "properties": {
+        "name": { "$ref": "#/$defs/nonempty" },
+        "width": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "deviceScaleFactor": { "type": "number", "minimum": 0.1, "maximum": 8 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "source", "capturedAt", "author", "notes"],
+      "properties": {
+        "type": { "enum": ["user-provided", "url-capture", "figma-export", "screen-recording-frame", "generated", "other"] },
+        "source": { "$ref": "#/$defs/nonempty" },
+        "capturedAt": { "type": ["string", "null"], "format": "date-time" },
+        "author": { "$ref": "#/$defs/nullableString" },
+        "notes": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "licence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "identifier", "termsUrl", "attribution", "notes"],
+      "properties": {
+        "status": { "enum": ["owned", "licensed", "permission-granted", "public-domain", "unknown"] },
+        "identifier": { "$ref": "#/$defs/nullableString" },
+        "termsUrl": { "type": ["string", "null"], "format": "uri" },
+        "attribution": { "$ref": "#/$defs/nullableString" },
+        "notes": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "authorizedScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projectPaths", "routes", "operations", "notes"],
+      "properties": {
+        "projectPaths": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/projectPath" } },
+        "routes": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["decompose", "map-components", "plan-reconstruction", "reconstruct", "compare", "extract-assets"] }
+        },
+        "notes": { "$ref": "#/$defs/nullableString" }
+      },
+      "anyOf": [
+        { "properties": { "projectPaths": { "minItems": 1 } } },
+        { "properties": { "routes": { "minItems": 1 } } }
+      ]
+    },
+    "referenceEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "originalPath", "storedPath", "format", "mediaType", "bytes", "width", "height", "sha256", "provenance", "licence", "viewport", "authorizedScope"],
+      "properties": {
+        "id": { "$ref": "#/$defs/safeId" },
+        "originalPath": { "$ref": "#/$defs/projectPath" },
+        "storedPath": { "$ref": "#/$defs/projectPath" },
+        "format": { "enum": ["png", "jpeg", "webp"] },
+        "mediaType": { "enum": ["image/png", "image/jpeg", "image/webp"] },
+        "bytes": { "type": "integer", "minimum": 1, "maximum": 20971520 },
+        "width": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "provenance": { "$ref": "#/$defs/provenance" },
+        "licence": { "$ref": "#/$defs/licence" },
+        "viewport": { "$ref": "#/$defs/viewport" },
+        "authorizedScope": { "$ref": "#/$defs/authorizedScope" }
+      }
+    },
+    "referenceManifest": {
+      "allOf": [
+        { "$ref": "#/$defs/common" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "artifactId", "createdAt", "projectRootSha256", "limits", "references"],
+          "properties": {
+            "kind": { "const": "reference-manifest/v1" },
+            "artifactId": { "$ref": "#/$defs/safeId" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "projectRootSha256": { "$ref": "#/$defs/sha256" },
+            "limits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["maxReferences", "maxBytesPerReference", "allowedFormats"],
+              "properties": {
+                "maxReferences": { "const": 5 },
+                "maxBytesPerReference": { "const": 20971520 },
+                "allowedFormats": { "const": ["png", "jpeg", "webp"] }
+              }
+            },
+            "references": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/referenceEntry" } }
+          }
+        }
+      ]
+    },
+    "visual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layout", "colors", "typography", "spacing", "assets"],
+      "properties": {
+        "layout": { "$ref": "#/$defs/nonempty" },
+        "colors": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } },
+        "typography": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } },
+        "spacing": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } },
+        "assets": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } }
+      }
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "role", "bounds", "description", "confidence", "visual", "evidence"],
+      "properties": {
+        "id": { "$ref": "#/$defs/safeId" },
+        "label": { "$ref": "#/$defs/nonempty" },
+        "role": { "enum": ["page", "header", "navigation", "main", "section", "card", "form", "control", "content", "media", "decoration", "footer", "overlay", "other"] },
+        "bounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y", "width", "height", "unit"],
+          "properties": {
+            "x": { "type": "number", "minimum": 0 },
+            "y": { "type": "number", "minimum": 0 },
+            "width": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 },
+            "unit": { "const": "px" }
+          }
+        },
+        "description": { "$ref": "#/$defs/nonempty" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "visual": { "$ref": "#/$defs/visual" },
+        "evidence": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } }
+      }
+    },
+    "visualDecomposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "artifactId", "createdAt", "projectRootSha256", "manifest", "referenceId", "authoredBy", "canvas", "global", "regions", "assumptions", "unresolved"],
+      "properties": {
+        "kind": { "const": "visual-decomposition/v1" },
+        "artifactId": { "$ref": "#/$defs/safeId" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "projectRootSha256": { "$ref": "#/$defs/sha256" },
+        "manifest": { "$ref": "#/$defs/artifactReference" },
+        "referenceId": { "$ref": "#/$defs/safeId" },
+        "authoredBy": { "$ref": "#/$defs/author" },
+        "canvas": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": {
+            "width": { "type": "integer", "minimum": 1, "maximum": 16384 },
+            "height": { "type": "integer", "minimum": 1, "maximum": 16384 }
+          }
+        },
+        "global": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["summary", "layout", "palette", "typography", "spacing"],
+          "properties": {
+            "summary": { "$ref": "#/$defs/nonempty" },
+            "layout": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } },
+            "palette": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } },
+            "typography": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } },
+            "spacing": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } }
+          }
+        },
+        "regions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/region" } },
+        "assumptions": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } },
+        "unresolved": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } }
+      }
+    },
+    "componentMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "artifactId", "createdAt", "projectRootSha256", "manifest", "referenceId", "decomposition", "authoredBy", "mappings", "unmappedRegions"],
+      "properties": {
+        "kind": { "const": "component-mapping/v1" },
+        "artifactId": { "$ref": "#/$defs/safeId" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "projectRootSha256": { "$ref": "#/$defs/sha256" },
+        "manifest": { "$ref": "#/$defs/artifactReference" },
+        "referenceId": { "$ref": "#/$defs/safeId" },
+        "decomposition": { "$ref": "#/$defs/artifactReference" },
+        "authoredBy": { "$ref": "#/$defs/author" },
+        "mappings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "regionIds", "target", "strategy", "rationale", "confidence"],
+            "properties": {
+              "id": { "$ref": "#/$defs/safeId" },
+              "regionIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/safeId" } },
+              "target": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["projectPath", "exportName", "route"],
+                "properties": {
+                  "projectPath": { "$ref": "#/$defs/projectPath" },
+                  "exportName": { "$ref": "#/$defs/nullableString" },
+                  "route": { "$ref": "#/$defs/nullableString" }
+                }
+              },
+              "strategy": { "enum": ["reuse", "adapt", "create"] },
+              "rationale": { "$ref": "#/$defs/nonempty" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "unmappedRegions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["regionId", "reason"],
+            "properties": {
+              "regionId": { "$ref": "#/$defs/safeId" },
+              "reason": { "$ref": "#/$defs/nonempty" }
+            }
+          }
+        }
+      }
+    },
+    "reconstructionPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "artifactId", "createdAt", "projectRootSha256", "manifest", "referenceId", "componentMapping", "authoredBy", "rules", "steps", "verification"],
+      "properties": {
+        "kind": { "const": "reconstruction-plan/v1" },
+        "artifactId": { "$ref": "#/$defs/safeId" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "projectRootSha256": { "$ref": "#/$defs/sha256" },
+        "manifest": { "$ref": "#/$defs/artifactReference" },
+        "referenceId": { "$ref": "#/$defs/safeId" },
+        "componentMapping": { "$ref": "#/$defs/artifactReference" },
+        "authoredBy": { "$ref": "#/$defs/author" },
+        "rules": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["noWholeReferenceBackground", "preserveExistingStack", "assetReuse", "scopeEnforced"],
+          "properties": {
+            "noWholeReferenceBackground": { "const": true },
+            "preserveExistingStack": { "const": true },
+            "assetReuse": { "enum": ["exact-or-cropped", "exact-only"] },
+            "scopeEnforced": { "const": true }
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "order", "title", "action", "targets", "mappingIds", "dependsOn", "acceptance"],
+            "properties": {
+              "id": { "$ref": "#/$defs/safeId" },
+              "order": { "type": "integer", "minimum": 1 },
+              "title": { "$ref": "#/$defs/nonempty" },
+              "action": { "enum": ["reuse", "create", "modify", "integrate", "verify"] },
+              "targets": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/projectPath" } },
+              "mappingIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/safeId" } },
+              "dependsOn": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/safeId" } },
+              "acceptance": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } }
+            }
+          }
+        },
+        "verification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["viewports", "implementationFiles", "requiredComparisons"],
+          "properties": {
+            "viewports": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/$defs/namedViewport" } },
+            "implementationFiles": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/projectPath" } },
+            "requiredComparisons": { "const": 1 }
+          }
+        }
+      }
+    },
+    "imageEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "format", "mediaType", "bytes", "width", "height", "sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/projectPath" },
+        "format": { "enum": ["png", "jpeg", "webp"] },
+        "mediaType": { "enum": ["image/png", "image/jpeg", "image/webp"] },
+        "bytes": { "type": "integer", "minimum": 1, "maximum": 20971520 },
+        "width": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "captureProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "configHash", "startedAt", "finishedAt"],
+      "properties": {
+        "path": { "const": ".dk/proof/app-proof.json" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "configHash": { "$ref": "#/$defs/sha256" },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "finishedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "captureLedger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "generatedAt", "runtimeVersion", "configHash", "sourceFingerprint", "partial"],
+      "properties": {
+        "path": { "const": ".dk/report.json" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "runtimeVersion": { "$ref": "#/$defs/nonempty" },
+        "configHash": { "$ref": "#/$defs/sha256Prefix16" },
+        "sourceFingerprint": {
+          "anyOf": [{ "$ref": "#/$defs/sha256Prefix16" }, { "type": "null" }]
+        },
+        "partial": { "type": "boolean" }
+      }
+    },
+    "captureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "url", "route", "state", "theme", "viewport", "capturedAt", "screenshot"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^case_[a-f0-9]{24}$" },
+        "url": { "type": "string", "format": "uri", "pattern": "^https?://" },
+        "route": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "path"],
+          "properties": {
+            "name": { "$ref": "#/$defs/nonempty" },
+            "path": { "type": "string", "pattern": "^/" }
+          }
+        },
+        "state": { "$ref": "#/$defs/nonempty" },
+        "theme": { "$ref": "#/$defs/nonempty" },
+        "viewport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "width", "height", "deviceScaleFactor"],
+          "properties": {
+            "name": { "$ref": "#/$defs/nonempty" },
+            "width": { "type": "integer", "minimum": 1, "maximum": 16384 },
+            "height": { "type": "integer", "minimum": 1, "maximum": 16384 },
+            "deviceScaleFactor": { "const": 1 }
+          }
+        },
+        "capturedAt": { "type": "string", "format": "date-time" },
+        "screenshot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "sha256", "bytes", "width", "height", "fullPage"],
+          "properties": {
+            "path": { "type": "string", "pattern": "^\\.dk/proof/screenshots/case_[a-f0-9]{24}\\.png$" },
+            "sha256": { "$ref": "#/$defs/sha256" },
+            "bytes": { "type": "integer", "minimum": 1, "maximum": 20971520 },
+            "width": { "type": "integer", "minimum": 1, "maximum": 16384 },
+            "height": { "type": "integer", "minimum": 1, "maximum": 16384 },
+            "fullPage": { "const": true }
+          }
+        }
+      }
+    },
+    "captureAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reason", "proof", "ledger", "case"],
+      "properties": {
+        "status": { "enum": ["attested", "unattested"] },
+        "reason": { "anyOf": [{ "$ref": "#/$defs/nonempty" }, { "type": "null" }] },
+        "proof": { "anyOf": [{ "$ref": "#/$defs/captureProof" }, { "type": "null" }] },
+        "ledger": { "anyOf": [{ "$ref": "#/$defs/captureLedger" }, { "type": "null" }] },
+        "case": { "anyOf": [{ "$ref": "#/$defs/captureCase" }, { "type": "null" }] }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "status": { "const": "unattested" },
+            "reason": { "$ref": "#/$defs/nonempty" },
+            "proof": { "type": "null" },
+            "ledger": { "type": "null" },
+            "case": { "type": "null" }
+          }
+        },
+        {
+          "properties": {
+            "status": { "const": "attested" },
+            "reason": { "type": "null" },
+            "proof": { "$ref": "#/$defs/captureProof" },
+            "ledger": { "$ref": "#/$defs/captureLedger" },
+            "case": { "$ref": "#/$defs/captureCase" }
+          }
+        }
+      ]
+    },
+    "pixelStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pixels", "meanRgba", "standardDeviationRgba"],
+      "properties": {
+        "pixels": { "type": "integer", "minimum": 1, "maximum": 100000000 },
+        "meanRgba": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number", "minimum": 0, "maximum": 255 } },
+        "standardDeviationRgba": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number", "minimum": 0, "maximum": 255 } }
+      }
+    },
+    "regionFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "regionId", "type", "severity", "score", "summary", "evidence"],
+      "properties": {
+        "id": { "$ref": "#/$defs/safeId" },
+        "regionId": { "anyOf": [{ "$ref": "#/$defs/safeId" }, { "type": "null" }] },
+        "type": { "$ref": "#/$defs/nonempty" },
+        "severity": { "enum": ["info", "low", "medium", "high", "critical"] },
+        "score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "summary": { "$ref": "#/$defs/nonempty" },
+        "evidence": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonempty" } }
+      }
+    },
+    "delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "severity", "score", "summary", "source"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonempty" },
+        "type": { "$ref": "#/$defs/nonempty" },
+        "severity": { "enum": ["info", "low", "medium", "high", "critical"] },
+        "score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "summary": { "$ref": "#/$defs/nonempty" },
+        "source": { "enum": ["metric", "region", "policy", "attestation"] }
+      }
+    },
+    "referenceComparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "artifactId", "createdAt", "projectRootSha256", "manifest", "referenceId", "reconstructionPlan", "viewport", "generated", "candidate", "capture", "metrics", "regionFindings", "policy", "highestDeltas", "status"],
+      "properties": {
+        "kind": { "const": "reference-comparison/v1" },
+        "artifactId": { "$ref": "#/$defs/safeId" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "projectRootSha256": { "$ref": "#/$defs/sha256" },
+        "manifest": { "$ref": "#/$defs/artifactReference" },
+        "referenceId": { "$ref": "#/$defs/safeId" },
+        "reconstructionPlan": { "$ref": "#/$defs/artifactReference" },
+        "viewport": { "$ref": "#/$defs/namedViewport" },
+        "generated": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["engine", "engineVersion", "inputsSha256"],
+          "properties": {
+            "engine": { "const": "axion-reference-core" },
+            "engineVersion": { "const": 1 },
+            "inputsSha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "candidate": { "$ref": "#/$defs/imageEvidence" },
+        "capture": { "$ref": "#/$defs/captureAttestation" },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["exactHashMatch", "dimensions", "pixelStats"],
+          "properties": {
+            "exactHashMatch": { "type": "boolean" },
+            "dimensions": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["match", "reference", "candidate", "widthDeltaPx", "heightDeltaPx", "aspectRatioDelta"],
+              "properties": {
+                "match": { "type": "boolean" },
+                "reference": {
+                  "type": "object", "additionalProperties": false, "required": ["width", "height"],
+                  "properties": { "width": { "type": "integer", "minimum": 1 }, "height": { "type": "integer", "minimum": 1 } }
+                },
+                "candidate": {
+                  "type": "object", "additionalProperties": false, "required": ["width", "height"],
+                  "properties": { "width": { "type": "integer", "minimum": 1 }, "height": { "type": "integer", "minimum": 1 } }
+                },
+                "widthDeltaPx": { "type": "integer", "minimum": 0 },
+                "heightDeltaPx": { "type": "integer", "minimum": 0 },
+                "aspectRatioDelta": { "type": "number", "minimum": 0 }
+              }
+            },
+            "pixelStats": {
+              "type": ["object", "null"],
+              "additionalProperties": false,
+              "required": ["reference", "candidate", "meanAbsoluteChannelDelta", "normalizedMeanDelta", "changedPixelRatio", "maxChannelDelta"],
+              "properties": {
+                "reference": { "$ref": "#/$defs/pixelStats" },
+                "candidate": { "$ref": "#/$defs/pixelStats" },
+                "meanAbsoluteChannelDelta": { "type": "number", "minimum": 0, "maximum": 255 },
+                "normalizedMeanDelta": { "type": "number", "minimum": 0, "maximum": 1 },
+                "changedPixelRatio": { "type": "number", "minimum": 0, "maximum": 1 },
+                "maxChannelDelta": { "type": "integer", "minimum": 0, "maximum": 255 }
+              }
+            }
+          }
+        },
+        "regionFindings": { "type": "array", "items": { "$ref": "#/$defs/regionFinding" } },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["noWholeReferenceBackground"],
+          "properties": {
+            "noWholeReferenceBackground": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status", "scannedFiles", "sourceDigests", "findings"],
+              "properties": {
+                "status": { "enum": ["pass", "fail", "not-scanned"] },
+                "scannedFiles": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/projectPath" } },
+                "sourceDigests": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["path", "sha256", "bytes"],
+                    "properties": {
+                      "path": { "$ref": "#/$defs/projectPath" },
+                      "sha256": { "$ref": "#/$defs/sha256" },
+                      "bytes": { "type": "integer", "minimum": 1, "maximum": 2097152 }
+                    }
+                  }
+                },
+                "findings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["file", "line", "ruleId", "message", "referenceId"],
+                    "properties": {
+                      "file": { "$ref": "#/$defs/projectPath" },
+                      "line": { "type": "integer", "minimum": 1 },
+                      "ruleId": { "$ref": "#/$defs/nonempty" },
+                      "message": { "$ref": "#/$defs/nonempty" },
+                      "referenceId": { "$ref": "#/$defs/safeId" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "highestDeltas": { "type": "array", "maxItems": 3, "items": { "$ref": "#/$defs/delta" } },
+        "status": { "enum": ["match", "review", "mismatch", "incomplete"] }
+      }
+    }
+  }
+}

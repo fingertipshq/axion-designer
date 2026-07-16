@@ -1,0 +1,47 @@
+name: Bug 回報
+description: dk 做錯事、崩潰，或行為與文件不符
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        安全問題請勿建立公開 issue；請依 SECURITY.md 使用 private vulnerability reporting。
+  - type: textarea
+    id: what
+    attributes:
+      label: 發生什麼事
+      description: 你預期的行為 vs 實際的行為
+      placeholder: 我跑 `dk verify` 預期 exit 0，卻拿到 exit 2 並……
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 重現步驟
+      description: 最小可重現。愈小愈快修。
+      placeholder: |
+        1. `dk new site`
+        2. 改 index.html 的 …
+        3. `dk verify` →
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: dk-version
+    attributes:
+      label: dk 版本 / commit
+      placeholder: "1.0.0 或 git SHA"
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: node 版本（`node -v`）
+      placeholder: "v22.x（地板為 18）"
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: 相關輸出（`dk verify --json` 佳）
+      render: shell

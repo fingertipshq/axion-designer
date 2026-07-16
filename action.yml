@@ -1,0 +1,216 @@
+name: 'Axion Designer verification'
+description: 'Collect verified Bridge evidence, run dk design-quality gates, and optionally write SARIF plus HTML artifacts.'
+author: 'Axion Designer contributors'
+branding:
+  icon: 'check-circle'
+  color: 'purple'
+
+inputs:
+  working-directory:
+    description: 'Project directory containing dk.config.mjs or design/tokens.json.'
+    required: false
+    default: '.'
+  args:
+    description: 'dk command and flags, for example "verify" or "verify --full --require-gates".'
+    required: false
+    default: 'verify'
+  sarif:
+    description: 'Write a SARIF 2.1.0 report when true.'
+    required: false
+    default: 'false'
+  sarif-path:
+    description: 'SARIF output path relative to working-directory.'
+    required: false
+    default: 'dk-report.sarif'
+  html:
+    description: 'Render the persisted verification ledger as a self-contained HTML review artifact.'
+    required: false
+    default: 'false'
+  html-path:
+    description: 'HTML review artifact path relative to working-directory.'
+    required: false
+    default: 'dk-report.html'
+  bridge-sync:
+    description: 'Collect configured Axion Bridge evidence before verification.'
+    required: false
+    default: 'false'
+  bridge-publish:
+    description: 'Publish collected envelopes to configured Bridge sinks. Requires bridge-sync=true.'
+    required: false
+    default: 'false'
+
+outputs:
+  exit-code:
+    description: 'dk exit code: 0 pass, 1 policy finding, 2 usage or configuration error.'
+    value: ${{ steps.run.outputs.exit-code }}
+  sarif-path:
+    description: 'Absolute path to the generated SARIF report, or an empty string.'
+    value: ${{ steps.run.outputs.sarif-path }}
+  html-path:
+    description: 'Absolute path to the generated HTML review artifact, or an empty string.'
+    value: ${{ steps.run.outputs.html-path }}
+  bridge-ledger-path:
+    description: 'Absolute path to the verified Bridge ledger when bridge-sync is enabled.'
+    value: ${{ steps.run.outputs.bridge-ledger-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run dk
+      id: run
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        DK_BIN: ${{ github.action_path }}/bin/dk.mjs
+        DK_ENTRY: ${{ github.action_path }}/index.mjs
+        DK_ARGS: ${{ inputs.args }}
+        DK_SARIF: ${{ inputs.sarif }}
+        DK_SARIF_PATH: ${{ inputs.sarif-path }}
+        DK_HTML: ${{ inputs.html }}
+        DK_HTML_PATH: ${{ inputs.html-path }}
+        DK_BRIDGE_SYNC: ${{ inputs.bridge-sync }}
+        DK_BRIDGE_PUBLISH: ${{ inputs.bridge-publish }}
+      run: |
+        set +e
+        set -f
+        if ! command -v node >/dev/null 2>&1; then
+          echo "::error::dk requires Node.js 18 or newer on PATH." >&2
+          {
+            echo "exit-code=2"
+            echo "sarif-path="
+            echo "html-path="
+            echo "bridge-ledger-path="
+          } >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        major="$(node -p 'process.versions.node.split(".")[0]')"
+        if [ "${major:-0}" -lt 18 ]; then
+          echo "::error::dk requires Node.js 18 or newer; found $(node -v)." >&2
+          {
+            echo "exit-code=2"
+            echo "sarif-path="
+            echo "html-path="
+            echo "bridge-ledger-path="
+          } >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        file_state() {
+          node -e '
+            const { statSync } = require("node:fs");
+            try {
+              const value = statSync(process.argv[1], { bigint: true });
+              process.stdout.write([value.dev, value.ino, value.size, value.mtimeNs, value.ctimeNs].join(":"));
+            } catch {}
+          ' "$1"
+        }
+        # Bridge collection is explicit and fail-closed. Credentials remain in
+        # environment/secrets; the repository-owned manifest stores names only.
+        bridge_code=0
+        if [ "$DK_BRIDGE_PUBLISH" = "true" ] && [ "$DK_BRIDGE_SYNC" != "true" ]; then
+          echo "::error::bridge-publish=true requires bridge-sync=true." >&2
+          bridge_code=2
+        fi
+        if [ "$DK_BRIDGE_SYNC" = "true" ]; then
+          bridge_args=(bridge sync)
+          if [ "$DK_BRIDGE_PUBLISH" = "true" ]; then bridge_args+=(--publish); fi
+          node "$DK_BIN" "${bridge_args[@]}"
+          bridge_code=$?
+          bridge_ledger_path="$(node --input-type=module -e '
+            import { resolve } from "node:path";
+            import { pathToFileURL } from "node:url";
+            const write = process.stdout.write.bind(process.stdout);
+            process.stdout.write = () => true;
+            let config;
+            try {
+              const module = await import(pathToFileURL(process.env.DK_ENTRY).href);
+              config = await module.loadConfig(process.cwd());
+            } finally {
+              process.stdout.write = write;
+            }
+            write(resolve(config.bridge.artifactDir, "ledger.json"));
+          ')"
+          node "$DK_BIN" bridge status --json >/dev/null
+          bridge_status_code=$?
+          if [ "$bridge_status_code" -ne 0 ] && [ "$bridge_code" -eq 0 ]; then bridge_code=$bridge_status_code; fi
+          if [ "$bridge_code" -eq 0 ] && [ -n "$bridge_ledger_path" ] && [ -f "$bridge_ledger_path" ]; then
+            echo "bridge-ledger-path=$bridge_ledger_path" >> "$GITHUB_OUTPUT"
+          else
+            echo "bridge-ledger-path=" >> "$GITHUB_OUTPUT"
+          fi
+        else
+          echo "bridge-ledger-path=" >> "$GITHUB_OUTPUT"
+        fi
+        # Run the requested verification exactly once. Optional review
+        # surfaces are rendered from its persisted ledger in separate commands,
+        # so `args: verify --json` can never put JSON bytes in a `.sarif` file.
+        report_before="$(file_state .dk/report.json)"
+        read -r -a dk_args <<< "${DK_ARGS:-verify}"
+        node "$DK_BIN" "${dk_args[@]}"
+        code=$?
+        report_after="$(file_state .dk/report.json)"
+        report_fresh=false
+        if [ -n "$report_after" ] && [ "$report_after" != "$report_before" ]; then report_fresh=true; fi
+        if [ "$bridge_code" -eq 2 ]; then
+          code=2
+        elif [ "$bridge_code" -ne 0 ] && [ "$code" -eq 0 ]; then
+          code=$bridge_code
+        fi
+        if [ "$DK_SARIF" = "true" ] && [ "$report_fresh" = "true" ]; then
+          sarif_before="$(file_state "$DK_SARIF_PATH")"
+          node "$DK_BIN" report --sarif --out "$DK_SARIF_PATH"
+          sarif_code=$?
+          sarif_after="$(file_state "$DK_SARIF_PATH")"
+          if [ "$sarif_code" -eq 0 ] && [ -n "$sarif_after" ] && [ "$sarif_after" != "$sarif_before" ]; then
+            case "$DK_SARIF_PATH" in
+              /*) sp="$DK_SARIF_PATH" ;;
+              *) sp="$(pwd)/$DK_SARIF_PATH" ;;
+            esac
+            echo "sarif-path=$sp" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::SARIF rendering failed or did not generate the requested artifact." >&2
+            echo "sarif-path=" >> "$GITHUB_OUTPUT"
+            if [ "$sarif_code" -eq 0 ]; then sarif_code=2; fi
+          fi
+          if [ "$sarif_code" -eq 2 ] || { [ "$sarif_code" -ne 0 ] && [ "$code" -eq 0 ]; }; then code=$sarif_code; fi
+        elif [ "$DK_SARIF" = "true" ]; then
+          echo "::error::SARIF was requested, but this action run did not produce a fresh .dk/report.json." >&2
+          code=2
+          echo "sarif-path=" >> "$GITHUB_OUTPUT"
+        else
+          echo "sarif-path=" >> "$GITHUB_OUTPUT"
+        fi
+        if [ "$DK_HTML" = "true" ] && [ "$report_fresh" = "true" ]; then
+          html_before="$(file_state "$DK_HTML_PATH")"
+          node "$DK_BIN" report --html --out "$DK_HTML_PATH"
+          html_code=$?
+          html_after="$(file_state "$DK_HTML_PATH")"
+          if [ "$html_code" -eq 0 ] && [ -n "$html_after" ] && [ "$html_after" != "$html_before" ]; then
+            case "$DK_HTML_PATH" in
+              /*) hp="$DK_HTML_PATH" ;;
+              *) hp="$(pwd)/$DK_HTML_PATH" ;;
+            esac
+            echo "html-path=$hp" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::HTML rendering failed or did not generate the requested artifact." >&2
+            echo "html-path=" >> "$GITHUB_OUTPUT"
+            if [ "$html_code" -eq 0 ]; then html_code=2; fi
+          fi
+          if [ "$html_code" -eq 2 ] || { [ "$html_code" -ne 0 ] && [ "$code" -eq 0 ]; }; then code=$html_code; fi
+        elif [ "$DK_HTML" = "true" ]; then
+          echo "::error::HTML was requested, but this action run did not produce a fresh .dk/report.json." >&2
+          code=2
+          echo "html-path=" >> "$GITHUB_OUTPUT"
+        else
+          echo "html-path=" >> "$GITHUB_OUTPUT"
+        fi
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        exit 0
+
+    - name: Gate on dk exit code
+      if: ${{ steps.run.outputs.exit-code != '0' }}
+      shell: bash
+      env:
+        DK_CODE: ${{ steps.run.outputs.exit-code }}
+      run: |
+        echo "dk exited ${DK_CODE}." >&2
+        exit "${DK_CODE:-1}"

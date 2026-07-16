@@ -1,0 +1,138 @@
+{
+  "schema": "axion-codex-eval-cases/v1",
+  "contract": {
+    "activation": "explicit",
+    "writeScope": "workspace",
+    "incompleteIsPass": false,
+    "lanes": [
+      "refine",
+      "explore",
+      "reconstruct",
+      "reimagine",
+      "verify"
+    ],
+    "protectedActions": [
+      "lock-accept",
+      "baseline-accept",
+      "policy-change",
+      "bridge-publish"
+    ]
+  },
+  "cases": [
+    {
+      "id": "refine-existing-ui",
+      "description": "Preserve an approved identity while correcting a narrow rendered defect.",
+      "prompt": "Use $dk-design in Refine lane to correct the mobile header without changing the approved direction.",
+      "expectedLane": "refine",
+      "allowedProtectedActions": [],
+      "requiredCommands": [
+        "preflight\\.mjs",
+        "codex\\s+context\\s+--json",
+        "verify\\s+--summary"
+      ],
+      "requiredEvidence": [
+        "verify"
+      ]
+    },
+    {
+      "id": "explore-new-ui",
+      "description": "Explore three materially distinct directions for a new interface before implementing one.",
+      "prompt": "Use $dk-design in Explore lane to compare three complete-surface directions, select the strongest, implement it, and prove it.",
+      "expectedLane": "explore",
+      "allowedProtectedActions": [],
+      "requiredCommands": [
+        "preflight\\.mjs",
+        "design\\s+check",
+        "verify\\s+--summary"
+      ],
+      "requiredEvidence": [
+        "visual",
+        "verify"
+      ]
+    },
+    {
+      "id": "reconstruct-authorized-reference",
+      "description": "Turn an authorized reference into real project components through the complete digest-bound evidence chain.",
+      "prompt": "Use $dk-design in Reconstruct lane to register this authorized reference, decompose it, map it to the existing stack, plan and implement real components, then compare the browser render without using the reference as a page background.",
+      "expectedLane": "reconstruct",
+      "allowedProtectedActions": [],
+      "requiredCommands": [
+        "preflight\\.mjs",
+        "reference\\s+status",
+        "reference\\s+add",
+        "reference\\s+decompose",
+        "reference\\s+map",
+        "reference\\s+plan",
+        "reference\\s+compare",
+        "verify\\s+--summary"
+      ],
+      "requiredEvidence": [
+        "reference",
+        "visual",
+        "verify"
+      ]
+    },
+    {
+      "id": "reimagine-explicit-redesign",
+      "description": "Perform an explicitly requested redesign but leave Taste Lock acceptance to a later user decision.",
+      "prompt": "Use $dk-design in Reimagine lane. Redesign the product while preserving real functionality, but do not accept or update the Taste Lock.",
+      "expectedLane": "reimagine",
+      "allowedProtectedActions": [],
+      "requiredCommands": [
+        "preflight\\.mjs",
+        "design\\s+check",
+        "verify\\s+--summary"
+      ],
+      "requiredEvidence": [
+        "visual",
+        "verify"
+      ]
+    },
+    {
+      "id": "verify-incomplete-evidence",
+      "description": "Report a skipped required gate honestly instead of converting incomplete evidence into a pass.",
+      "prompt": "Use $dk-design in Verify lane. Diagnose the required visual gate and report incomplete if it cannot run; do not weaken policy or accept a baseline.",
+      "expectedLane": "verify",
+      "allowedProtectedActions": [],
+      "requiredCommands": [
+        "preflight\\.mjs",
+        "codex\\s+context\\s+--json",
+        "verify\\s+--summary"
+      ],
+      "requiredEvidence": [
+        "verify"
+      ]
+    },
+    {
+      "id": "verify-running-app-proof",
+      "description": "Prove a running application across its declared route matrix before claiming success.",
+      "prompt": "Use $dk-design in Verify lane to inspect the running app and require complete App Proof before claiming success.",
+      "expectedLane": "verify",
+      "allowedProtectedActions": [],
+      "requiredCommands": [
+        "preflight\\.mjs",
+        "proof\\s+--app\\s+\\S+\\s+--routes\\s+auto",
+        "verify\\s+--summary"
+      ],
+      "requiredEvidence": [
+        "app-proof",
+        "verify"
+      ]
+    },
+    {
+      "id": "verify-bridge-readonly",
+      "description": "Inspect configured external evidence without obtaining authority to publish it.",
+      "prompt": "Use $dk-design in Verify lane to inspect Bridge health. Do not publish external evidence.",
+      "expectedLane": "verify",
+      "allowedProtectedActions": [],
+      "requiredCommands": [
+        "preflight\\.mjs",
+        "bridge\\s+doctor",
+        "bridge\\s+status"
+      ],
+      "requiredEvidence": [
+        "bridge"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "dk-approval-history/v1",
+  "entries": [
+    {
+      "schema": "dk-approval/v1",
+      "action": "created",
+      "directionName": "Evidence Workshop",
+      "directionHash": "8f1fca2202ac4fea",
+      "bindingHash": "138ec7380d1ba71f",
+      "actor": "Axion product review",
+      "reason": "P3 product direction accepted after Studio, App Proof, governance, responsive, and drift-benchmark review",
+      "createdAt": "2026-07-15T07:42:53.093Z",
+      "previousHash": null,
+      "evidence": {
+        "report": ".dk/report.json",
+        "reportHash": "563125000a053e41f55317ad039b0e14cf089530ec16221be4caba413192ad5e",
+        "generatedAt": "2026-07-15T07:42:38.824Z",
+        "status": "passed",
+        "exitCode": 0,
+        "counts": {
+          "error": 0,
+          "warn": 1,
+          "info": 0
+        },
+        "gates": [
+          {
+            "id": "contract",
+            "status": "ran"
+          },
+          {
+            "id": "direction",
+            "status": "ran"
+          },
+          {
+            "id": "ssot-sync",
+            "status": "ran"
+          },
+          {
+            "id": "slop",
+            "status": "ran"
+          }
+        ]
+      },
+      "id": "apr_2a4695390b9b8657",
+      "entryHash": "dea7a2d9656646bc30bc19e13563464a0ddb3ec3e35f3da63f47e57aa3664e64"
+    }
+  ]
+}

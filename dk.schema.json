@@ -1,0 +1,386 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unpkg.com/axion-designer/dk.schema.json",
+  "title": "Axion Designer configuration",
+  "description": "Configuration for dk AI art direction and deterministic design-quality proof.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "preset": { "enum": ["recommended", "strict", "minimal"], "default": "recommended" },
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": { "type": "string", "default": "design/tokens.json" },
+        "output": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "properties": {
+            "css": { "type": "string" },
+            "js": { "type": "string" },
+            "json": { "type": "string" }
+          }
+        }
+      }
+    },
+    "direction": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Portable AI art-direction contract and Taste Lock. Optional until a direction file is created.",
+      "properties": {
+        "source": { "type": "string", "default": "design/direction.json" },
+        "lock": { "type": "string", "default": "design/direction.lock.json" },
+        "required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Require the direction to be present, approved, and Taste-Locked; drafts or unlocked contracts become blocking."
+        }
+      }
+    },
+    "targets": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "ignore": { "type": "array", "items": { "type": "string" } },
+    "failOn": { "enum": ["error", "warn"], "default": "error" },
+    "failOnSkipped": {
+      "type": "boolean",
+      "default": false,
+      "description": "Fail when any attempted optional gate cannot run. Explicit --full runs also block infrastructure failures."
+    },
+    "tokens_required": { "type": "array", "items": { "type": "string" } },
+    "contrast": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": { "enum": ["wcag", "apca"], "default": "wcag" },
+        "modes": {
+          "type": "array",
+          "items": { "enum": ["light", "dark"] },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "pairs": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [{ "type": "string" }, { "type": "string" }, { "type": "number", "exclusiveMinimum": 0 }],
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      }
+    },
+    "enforce": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "spacing": { "$ref": "#/$defs/enforcement" },
+        "radius": { "$ref": "#/$defs/enforcement" },
+        "type": { "$ref": "#/$defs/enforcement" }
+      }
+    },
+    "slop": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fonts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allow": { "type": "array", "items": { "type": "string" } },
+            "deny": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "pattern"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "zone": { "enum": ["style", "all"] },
+              "pattern": { "type": "string" },
+              "flags": { "type": "string" },
+              "severity": { "enum": ["error", "warn", "info"] },
+              "message": { "type": "string" },
+              "hint": { "type": "string" },
+              "fix": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "severity": {
+      "type": "object",
+      "additionalProperties": { "enum": ["error", "warn", "info", "off"] }
+    },
+    "allowlist": {
+      "type": "object",
+      "additionalProperties": { "type": "array", "items": { "type": "string" } }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A real dev-server verification matrix consumed by the Playwright + axe a11y gate.",
+      "required": ["baseUrl"],
+      "properties": {
+        "baseUrl": {
+          "type": "string",
+          "pattern": "^https?://",
+          "description": "Running app origin. Credentials in the URL are rejected at runtime."
+        },
+        "routes": {
+          "oneOf": [
+            { "const": "auto", "description": "Cover the entry URL and same-origin links visible from it; the report labels this discovery boundary." },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "oneOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "$ref": "#/$defs/proofRoute" }
+                ]
+              }
+            }
+          ],
+          "default": ["/"]
+        },
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/proofState" },
+          "default": ["default"]
+        },
+        "viewports": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              { "type": "integer", "minimum": 240, "maximum": 7680 },
+              { "$ref": "#/$defs/proofViewport" }
+            ]
+          }
+        },
+        "themes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              { "$ref": "#/$defs/proofTheme" }
+            ]
+          },
+          "default": ["light", "dark"]
+        },
+        "timeoutMs": { "type": "integer", "minimum": 1000, "maximum": 120000, "default": 15000 },
+        "maxRoutes": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 },
+        "maxCases": { "type": "integer", "minimum": 1, "maximum": 2000, "default": 200 }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cssStrict": { "$ref": "#/$defs/enabledGate" },
+        "a11y": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "tags": {
+              "type": "array",
+              "description": "Supported Axe standards/profile tags. An empty array runs Axe's default all-rules selection.",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "wcag2a", "wcag2aa", "wcag2aaa", "wcag21a", "wcag21aa", "wcag22aa",
+                  "best-practice", "section508", "ACT", "EN-301-549", "RGAAv4", "TTv5", "experimental"
+                ]
+              }
+            }
+          }
+        },
+        "visual": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "viewports": { "type": "array", "items": { "type": "integer", "minimum": 1 } },
+            "themes": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "bridge": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Validate the latest Axion Bridge integration ledger during verification.",
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "bridge": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Repository-owned Axion Bridge connections. Secrets must be referenced by environment-variable name in options, never stored inline.",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "source": { "type": "string", "minLength": 1, "default": "design/bridge.json" },
+        "artifactDir": { "type": "string", "minLength": 1, "default": ".dk/bridge" },
+        "timeoutMs": { "type": "integer", "minimum": 100, "maximum": 120000, "default": 30000 },
+        "maxArtifactBytes": { "type": "integer", "minimum": 1024, "maximum": 67108864, "default": 2097152 },
+        "freshnessMs": { "type": "integer", "minimum": 1000, "maximum": 31536000000, "default": 86400000 },
+        "connections": {
+          "type": "array",
+          "maxItems": 100,
+          "items": { "$ref": "#/$defs/bridgeConnection" },
+          "default": []
+        }
+      }
+    },
+    "baseline": { "type": "string", "default": ".dk/baseline.json" },
+    "report": { "type": "object" }
+  },
+  "$defs": {
+    "bridgeConnection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "adapter"],
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$" },
+        "adapter": { "type": "string", "minLength": 1 },
+        "role": { "enum": ["source", "sink", "both"], "default": "source" },
+        "enabled": { "type": "boolean", "default": true },
+        "required": { "type": "boolean", "default": false },
+        "trust": { "enum": ["untrusted", "linked", "verified"], "default": "linked" },
+        "source": { "type": "string", "minLength": 1 },
+        "module": { "type": "string", "minLength": 1 },
+        "permissions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true,
+          "default": []
+        },
+        "options": { "type": "object", "default": {} }
+      }
+    },
+    "enforcement": { "enum": ["off", "warn", "error", true, false] },
+    "proofAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "selector"],
+      "properties": {
+        "type": { "enum": ["click", "fill", "check", "uncheck", "select", "press", "waitFor"] },
+        "selector": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "value": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "minItems": 1, "items": { "type": "string" } }
+          ]
+        },
+        "key": { "type": "string", "minLength": 1 },
+        "state": { "enum": ["attached", "detached", "visible", "hidden"] },
+        "timeoutMs": { "type": "integer", "minimum": 100, "maximum": 120000 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["type"],
+            "properties": { "type": { "const": "fill" } }
+          },
+          "then": {
+            "required": ["value"],
+            "properties": { "value": { "type": "string" } }
+          }
+        },
+        {
+          "if": {
+            "required": ["type"],
+            "properties": { "type": { "const": "select" } }
+          },
+          "then": { "required": ["value"] }
+        },
+        {
+          "if": {
+            "required": ["type"],
+            "properties": { "type": { "const": "press" } }
+          },
+          "then": { "required": ["key"] }
+        }
+      ]
+    },
+    "proofState": {
+      "oneOf": [
+        { "const": "default" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "actions": { "type": "array", "items": { "$ref": "#/$defs/proofAction" } },
+            "waitFor": { "type": "string", "minLength": 1, "maxLength": 2048 }
+          },
+          "allOf": [
+            {
+              "if": {
+                "required": ["name"],
+                "properties": { "name": { "not": { "const": "default" } } }
+              },
+              "then": {
+                "anyOf": [
+                  {
+                    "required": ["actions"],
+                    "properties": { "actions": { "minItems": 1 } }
+                  },
+                  { "required": ["waitFor"] }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "proofRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "waitFor": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "states": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/proofState" } }
+      }
+    },
+    "proofViewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "width": { "type": "integer", "minimum": 240, "maximum": 7680 },
+        "height": { "type": "integer", "minimum": 240, "maximum": 4320 }
+      }
+    },
+    "proofTheme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "colorScheme": { "enum": ["light", "dark", "no-preference"] },
+        "attributes": {
+          "type": "object",
+          "propertyNames": { "minLength": 1 },
+          "additionalProperties": { "type": "string" }
+        },
+        "classes": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "enabledGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "enabled": { "type": "boolean" } }
+    }
+  }
+}

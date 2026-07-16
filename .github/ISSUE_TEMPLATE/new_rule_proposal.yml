@@ -1,0 +1,73 @@
+name: 新規則提案
+description: 提一條新的反 slop / 品味規則（一條規則 = 資料 + 正反 fixture + golden 斷言）
+labels: ["new-rule"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        一條規則是**資料**不是程式碼：`{ id, zone, pattern, severity, message, hint }`。
+        提案必須附**正面與反面範例**——沒有正反例的規則無法被程式驗證，也就無法收進鏈。
+        既有規則與寫法範式見 docs/rules.md。
+  - type: input
+    id: rule-id
+    attributes:
+      label: 建議的規則 id
+      placeholder: "brand/no-glow-shadow · slop/xxx"
+    validations:
+      required: true
+  - type: dropdown
+    id: zone
+    attributes:
+      label: zone
+      options: ["style（樣式宣告內）", "content（可見文字內）", "any"]
+    validations:
+      required: true
+  - type: input
+    id: pattern
+    attributes:
+      label: 命中的 pattern（JS regex 字串）
+      placeholder: "filter:\\s*drop-shadow"
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 建議 severity
+      options: ["info", "warn", "error（會 exit 1）"]
+    validations:
+      required: true
+  - type: input
+    id: message
+    attributes:
+      label: 紅字訊息（使用者當場讀到的一句）
+      placeholder: "禁止 glow 陰影"
+    validations:
+      required: true
+  - type: input
+    id: hint
+    attributes:
+      label: 一行怎麼修（指向 var(--token) / tokens.json，絕不叫人消音）
+      placeholder: "用 var(--shadow-card)"
+    validations:
+      required: true
+  - type: textarea
+    id: positive
+    attributes:
+      label: 正面 fixture（該被抓的寫法）
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: negative
+    attributes:
+      label: 反面 fixture（合法用法，不該被抓）
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: defensible
+    attributes:
+      label: 為什麼可辯護
+      description: 一句話——這條規則罰的是真 slop，不是可溯源的真值或刻意的合法用法
+    validations:
+      required: true

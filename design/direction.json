@@ -1,0 +1,62 @@
+{
+  "$schema": "https://unpkg.com/axion-designer/direction.schema.json",
+  "schema": "dk-direction/v2",
+  "status": "approved",
+  "name": "Evidence Workshop",
+  "context": {
+    "register": "product",
+    "product": "Axion Designer, a local design-direction and proof system that helps teams shape, inspect, verify, and preserve production Web UI.",
+    "audience": [
+      "Frontend engineers who can build interfaces but need concrete art direction",
+      "Product designers and design-system leads who need implementation evidence and drift control",
+      "Newcomers who need plain-language guidance instead of unexplained design jargon"
+    ],
+    "task": "Move from product intent to a distinctive responsive interface, inspect the real rendered states, and decide whether the implementation has enough evidence to ship.",
+    "action": "Open the local Studio and review the current direction, proof matrix, and blocking findings",
+    "constraints": [
+      "Keep subjective taste guidance separate from deterministic pass or fail evidence",
+      "Never call a route or state proven unless a fresh complete clean artifact and passing ledger attest it",
+      "Keep Studio local and read-only; preview code stays in an opaque sandbox",
+      "Support keyboard use, readable contrast, reduced motion, mobile layouts, and 200 percent zoom"
+    ]
+  },
+  "identity": {
+    "thesis": "Make design intent, rendered UI, and verification evidence readable as one calm working surface.",
+    "qualities": [
+      "precise",
+      "evidence-led",
+      "editorial",
+      "approachable",
+      "operational"
+    ],
+    "signature": "A cobalt proof rail connects the chosen direction to concrete routes, states, tokens, and release evidence without turning the workspace into a monitoring dashboard.",
+    "composition": "Use one broad working canvas and one narrower evidence rail, joined by aligned rules and labels rather than a grid of interchangeable cards.",
+    "responsive": "On narrow screens, place the current verdict and next action first, then stack direction, preview, and evidence without changing their decision order.",
+    "typography": "Use the system sans for controls and guidance, a restrained book serif for direction statements, and monospace only for hashes, paths, tokens, and measured evidence.",
+    "color": "Use clean paper and quiet ink for the workspace, cobalt for the one primary action and proof rail, green only for verified evidence, and red only for blocking failures.",
+    "form": "Prefer crisp structural rules, modest radii, dense evidence rows, and clearly bounded transient panels; depth appears only where interaction requires layering.",
+    "motion": "Animate only view changes, disclosure, and inspector focus with short transitions; preserve meaning when reduced motion is requested.",
+    "media": "Use real UI screenshots, system graphs, and small functional diagrams; avoid decorative generated filler where product evidence should appear.",
+    "avoid": [
+      "interchangeable bento-card dashboards",
+      "decorative gradients, glass, glow, and neon command-center styling",
+      "vanity quality scores that hide missing evidence",
+      "generic AI typography and placeholder copy",
+      "calling source declarations or unverified screenshots proof of execution"
+    ]
+  },
+  "bindings": {
+    "accent": "color.brand.accent",
+    "surface": "color.surface.page",
+    "surfaceRaised": "color.surface.raised",
+    "text": "color.text.primary",
+    "textSecondary": "color.text.secondary",
+    "decisionPositive": "color.state.positive",
+    "decisionNegative": "color.state.negative",
+    "displayFont": "font.family.display",
+    "bodyFont": "font.family.base",
+    "dataFont": "font.family.mono",
+    "spacingBase": "space.4",
+    "radiusControl": "radius.sm"
+  }
+}

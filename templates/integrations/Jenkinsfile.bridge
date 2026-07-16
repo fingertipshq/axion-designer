@@ -1,0 +1,191 @@
+// Requires Node.js 20 on PATH and axion-designer pinned in devDependencies.
+// Publishing defaults off. Configure only the credential IDs used by this manifest;
+// custom adapters and dk.config.mjs are executable code.
+// If Chromatic is configured, provide CHROMATIC_BUILD_URL,
+// CHROMATIC_BUILD_STATUS and CHROMATIC_BUILD_NUMBER as trusted job variables.
+pipeline {
+  agent any
+
+  parameters {
+    booleanParam(
+      name: 'AXION_BRIDGE_PUBLISH',
+      defaultValue: false,
+      description: 'Explicitly publish configured Bridge sinks on a trusted main build.'
+    )
+  }
+
+  environment {
+    // Keep both paths aligned with bridge.artifactDir when using a non-default path.
+    AXION_BRIDGE_ARTIFACT_DIR = '.dk/bridge'
+    AXION_BRIDGE_LEDGER = '.dk/bridge/ledger.json'
+    // Administrators may pin a Jenkins Secret Text credential ID here. Keep an
+    // unused adapter empty; never turn a credential ID into a build parameter.
+    AXION_BRIDGE_FIGMA_CREDENTIAL_ID = ''
+    AXION_BRIDGE_WEBHOOK_ENDPOINT_CREDENTIAL_ID = ''
+    AXION_BRIDGE_WEBHOOK_CREDENTIAL_ID = ''
+    // Trusted administrators may replace ':' with a producer/restore command
+    // such as npm run build-storybook. It runs before every sync in a fresh run.
+    AXION_BRIDGE_PRE_SYNC_COMMAND = ':'
+  }
+
+  options {
+    timeout(time: 25, unit: 'MINUTES')
+    disableConcurrentBuilds(abortPrevious: true)
+  }
+
+  stages {
+    stage('Install') {
+      steps {
+        // Jenkins may reuse a workspace. Remove only generated Axion evidence so
+        // a failed build cannot archive files left by an earlier build.
+        sh '''
+          set -eu
+          case "$AXION_BRIDGE_ARTIFACT_DIR" in
+            ''|'.'|'..'|'/'|/*|../*|*/../*|*/..) echo 'Unsafe AXION_BRIDGE_ARTIFACT_DIR' >&2; exit 2 ;;
+          esac
+          rm -rf -- "$AXION_BRIDGE_ARTIFACT_DIR"
+          rm -f -- bridge-status.json bridge-publish-status.json dk-report.json
+        '''
+        sh 'node --version'
+        sh 'npm ci'
+      }
+    }
+
+    stage('Bridge evidence') {
+      steps {
+        script {
+          def collectEvidence = {
+            withEnv(["CHROMATIC_COMMIT=${env.CHROMATIC_COMMIT ?: env.GIT_COMMIT ?: ''}"]) {
+              try {
+                sh 'npx --no-install dk bridge doctor'
+                sh 'sh -eu -c "$AXION_BRIDGE_PRE_SYNC_COMMAND"'
+                sh 'npx --no-install dk bridge sync'
+              } finally {
+                sh '''
+                  set +e
+                  npx --no-install dk bridge status --json > bridge-status.json
+                  code=$?
+                  set -e
+                  cat bridge-status.json
+                  exit "$code"
+                '''
+              }
+            }
+          }
+
+          // Never resolve credentials while building a change request. A required
+          // secret-backed connection then fails closed; use a separate public/local
+          // PR manifest when secretless PR verification must pass.
+          if (env.BRANCH_NAME == 'main' && !env.CHANGE_ID) {
+            def credentialBindings = []
+            def figmaCredentialId = env.AXION_BRIDGE_FIGMA_CREDENTIAL_ID?.trim()
+            def webhookEndpointCredentialId = env.AXION_BRIDGE_WEBHOOK_ENDPOINT_CREDENTIAL_ID?.trim()
+            def webhookCredentialId = env.AXION_BRIDGE_WEBHOOK_CREDENTIAL_ID?.trim()
+            if (figmaCredentialId) {
+              credentialBindings << string(credentialsId: figmaCredentialId, variable: 'FIGMA_ACCESS_TOKEN')
+            }
+            if (webhookEndpointCredentialId) {
+              credentialBindings << string(credentialsId: webhookEndpointCredentialId, variable: 'AXION_WEBHOOK_ENDPOINT')
+            }
+            if (webhookCredentialId) {
+              credentialBindings << string(credentialsId: webhookCredentialId, variable: 'AXION_WEBHOOK_TOKEN')
+            }
+            if (credentialBindings) {
+              withCredentials(credentialBindings) {
+                collectEvidence()
+              }
+            } else {
+              collectEvidence()
+            }
+          } else {
+            collectEvidence()
+          }
+        }
+      }
+      post {
+        always {
+          script {
+            try {
+              sh '''
+                set +e
+                npx --no-install dk verify --full --require-gates --json > dk-report.json
+                code=$?
+                set -e
+                cat dk-report.json
+                exit "$code"
+              '''
+            } finally {
+              archiveArtifacts artifacts: "${env.AXION_BRIDGE_ARTIFACT_DIR}/**,bridge-status.json,dk-report.json", allowEmptyArchive: true, fingerprint: true
+            }
+          }
+        }
+      }
+    }
+
+    stage('Publish Bridge sinks') {
+      when {
+        allOf {
+          expression { params.AXION_BRIDGE_PUBLISH == true }
+          branch 'main'
+          not { changeRequest() }
+        }
+      }
+      steps {
+        script {
+          // This is the only stage that performs external sink writes. Jenkins
+          // supports webhook/custom sinks; the GitHub adapter's Check Run publisher
+          // requires a complete GitHub Actions environment.
+          def publishSinks = {
+            withEnv(["CHROMATIC_COMMIT=${env.CHROMATIC_COMMIT ?: env.GIT_COMMIT ?: ''}"]) {
+              sh '''
+                set +e
+                sh -eu -c "$AXION_BRIDGE_PRE_SYNC_COMMAND"
+                producer_code=$?
+                publish_code=0
+                if [ "$producer_code" -eq 0 ]; then
+                  npx --no-install dk bridge sync --publish
+                  publish_code=$?
+                fi
+                npx --no-install dk bridge status --require-sinks --json > bridge-publish-status.json
+                status_code=$?
+                set -e
+                cat bridge-publish-status.json
+                for code in "$producer_code" "$publish_code" "$status_code"; do
+                  if [ "$code" -ne 0 ]; then
+                    exit "$code"
+                  fi
+                done
+              '''
+            }
+          }
+
+          def credentialBindings = []
+          def figmaCredentialId = env.AXION_BRIDGE_FIGMA_CREDENTIAL_ID?.trim()
+          def webhookEndpointCredentialId = env.AXION_BRIDGE_WEBHOOK_ENDPOINT_CREDENTIAL_ID?.trim()
+          def webhookCredentialId = env.AXION_BRIDGE_WEBHOOK_CREDENTIAL_ID?.trim()
+          if (figmaCredentialId) {
+            credentialBindings << string(credentialsId: figmaCredentialId, variable: 'FIGMA_ACCESS_TOKEN')
+          }
+          if (webhookEndpointCredentialId) {
+            credentialBindings << string(credentialsId: webhookEndpointCredentialId, variable: 'AXION_WEBHOOK_ENDPOINT')
+          }
+          if (webhookCredentialId) {
+            credentialBindings << string(credentialsId: webhookCredentialId, variable: 'AXION_WEBHOOK_TOKEN')
+          }
+          if (credentialBindings) {
+            withCredentials(credentialBindings) {
+              publishSinks()
+            }
+          } else {
+            publishSinks()
+          }
+        }
+      }
+      post {
+        always {
+          archiveArtifacts artifacts: "${env.AXION_BRIDGE_ARTIFACT_DIR}/**,bridge-publish-status.json", allowEmptyArchive: true, fingerprint: true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "axion-codex-trace/v1",
+  "caseId": "refine-existing-ui",
+  "activation": "explicit",
+  "lane": "refine",
+  "workspace": "/workspace/project",
+  "commands": [
+    {
+      "command": "node /plugin/skills/dk-design/scripts/preflight.mjs --cwd /workspace/project",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs codex context --json",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs verify --summary",
+      "exitCode": 0
+    }
+  ],
+  "writes": [
+    {
+      "path": "src/components/Header.tsx",
+      "kind": "update"
+    },
+    {
+      "path": ".dk/report.json",
+      "kind": "update"
+    }
+  ],
+  "mutations": [
+    {
+      "kind": "source",
+      "summary": "Corrected the mobile header without changing the approved direction."
+    },
+    {
+      "kind": "generated-evidence",
+      "summary": "Refreshed the repository-local verification ledger."
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "verify",
+      "status": "passed",
+      "artifact": ".dk/report.json"
+    }
+  ],
+  "finalStatus": "passed"
+}

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8">
+<title>Anti-slop clean fixture</title>
+<style>
+  /* fallback 位置的 web-safe 字型不該報 ai-font（首位是刻意選的 Söhne）。 */
+  .brand { font-family: 'Söhne', Arial, Helvetica, sans-serif; }
+  /* 非法 7 碼 hex 不是合法顏色長度，不該報 hardcoded-color。 */
+  .weird { color: #1234567; }
+  /* SVG paint-server 以 url(#id) 引用 gradient/pattern，是「引用 id」不是寫死色——
+     即使 id 恰為 3/4/6/8 位純 hex 字元也不該報 hardcoded-color。 */
+  .icon { fill: url(#a1b2c3); stroke: url('#deadbeef'); }
+  .swatch { background: url("#face"); border-color: url(#abc); }
+</style>
+</head>
+<body>
+  <p>營收 $1,200 · 里程碑 1,000 · 序號 1,234,567</p>
+  <p>支援 4K / 8K 影片 · 儲存 3M 檔案 · 需要 Node 18+ 或 v18+</p>
+  <p>成立於 2024 年，前身可追溯到 1999。</p>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "schema": "dk-direction-lock/v2",
+  "directionHash": "8f1fca2202ac4fea",
+  "bindingHash": "138ec7380d1ba71f",
+  "approvalHeadHash": "dea7a2d9656646bc30bc19e13563464a0ddb3ec3e35f3da63f47e57aa3664e64",
+  "directionName": "Evidence Workshop",
+  "createdAt": "2026-07-15T07:42:53.095Z",
+  "updatedAt": "2026-07-15T07:42:53.095Z",
+  "note": "Locks approved visual identity and resolved semantic bindings; update only after intentional design review."
+}

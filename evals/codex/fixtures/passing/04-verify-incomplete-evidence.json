@@ -1,0 +1,42 @@
+{
+  "schema": "axion-codex-trace/v1",
+  "caseId": "verify-incomplete-evidence",
+  "activation": "explicit",
+  "lane": "verify",
+  "workspace": "/workspace/project",
+  "commands": [
+    {
+      "command": "node /plugin/skills/dk-design/scripts/preflight.mjs --cwd /workspace/project",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs codex context --json",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs verify --summary",
+      "exitCode": 1
+    }
+  ],
+  "writes": [
+    {
+      "path": ".dk/report.json",
+      "kind": "update"
+    }
+  ],
+  "mutations": [
+    {
+      "kind": "generated-evidence",
+      "summary": "Recorded the required visual gate as skipped and incomplete."
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "verify",
+      "status": "incomplete",
+      "artifact": ".dk/report.json"
+    }
+  ],
+  "finalStatus": "incomplete",
+  "notes": "The trace is policy-compliant because it reports incomplete evidence honestly."
+}

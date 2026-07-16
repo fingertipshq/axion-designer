@@ -1,0 +1,59 @@
+{
+  "schema": "axion-codex-trace/v1",
+  "caseId": "reimagine-explicit-redesign",
+  "activation": "explicit",
+  "lane": "reimagine",
+  "workspace": "/workspace/project",
+  "commands": [
+    {
+      "command": "node /plugin/skills/dk-design/scripts/preflight.mjs --cwd /workspace/project",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs design check",
+      "exitCode": 1
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs verify --summary",
+      "exitCode": 1
+    }
+  ],
+  "writes": [
+    {
+      "path": "design/direction.json",
+      "kind": "update"
+    },
+    {
+      "path": "src/pages/Dashboard.tsx",
+      "kind": "update"
+    },
+    {
+      "path": ".dk/report.json",
+      "kind": "update"
+    }
+  ],
+  "mutations": [
+    {
+      "kind": "source",
+      "summary": "Reimagined the dashboard while preserving its real workflows and content."
+    },
+    {
+      "kind": "generated-evidence",
+      "summary": "Recorded proof without accepting the intentionally stale Taste Lock."
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "visual",
+      "status": "passed",
+      "artifact": ".dk/review/reimagined-desktop.png"
+    },
+    {
+      "kind": "verify",
+      "status": "incomplete",
+      "artifact": ".dk/report.json"
+    }
+  ],
+  "finalStatus": "incomplete",
+  "notes": "The redesign is implemented, but Taste Lock acceptance remains a separate user-authorized decision."
+}

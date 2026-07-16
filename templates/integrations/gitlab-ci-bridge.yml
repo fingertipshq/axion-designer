@@ -1,0 +1,125 @@
+# Include from .gitlab-ci.yml or copy these jobs.
+# Store FIGMA_ACCESS_TOKEN / AXION_WEBHOOK_ENDPOINT / AXION_WEBHOOK_TOKEN as
+# masked, protected CI variables.
+stages:
+  - evidence
+  - verify
+  - publish
+
+default:
+  image: node:20-bookworm-slim
+  before_script:
+    - npm ci
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+
+variables:
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  # Disabled by default. Override with a protected project/group/pipeline
+  # variable set to the exact string "true" only when a sink is configured.
+  AXION_BRIDGE_PUBLISH: "false"
+  # Keep both paths aligned with bridge.artifactDir when using a non-default path.
+  AXION_BRIDGE_ARTIFACT_DIR: .dk/bridge
+  AXION_BRIDGE_LEDGER: .dk/bridge/ledger.json
+  # URL, status and build number may be supplied as project/group variables.
+  CHROMATIC_COMMIT: "$CI_COMMIT_SHA"
+  # Override with a trusted project/group variable when local Bridge sources
+  # must be generated or restored in each job, for example npm run build-storybook.
+  AXION_BRIDGE_PRE_SYNC_COMMAND: ":"
+
+axion:evidence:
+  stage: evidence
+  timeout: 20m
+  script:
+    - |
+      set +e
+      npx --no-install dk bridge doctor
+      doctor_code=$?
+      producer_code=0
+      sync_code=0
+      if [ "$doctor_code" -eq 0 ]; then
+        bash -euo pipefail -c "$AXION_BRIDGE_PRE_SYNC_COMMAND"
+        producer_code=$?
+      fi
+      if [ "$doctor_code" -eq 0 ] && [ "$producer_code" -eq 0 ]; then
+        npx --no-install dk bridge sync
+        sync_code=$?
+      fi
+      npx --no-install dk bridge status --json > bridge-status.json
+      status_code=$?
+      set -e
+      cat bridge-status.json
+      for code in "$doctor_code" "$producer_code" "$sync_code" "$status_code"; do
+        if [ "$code" -ne 0 ]; then
+          exit "$code"
+        fi
+      done
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - $AXION_BRIDGE_ARTIFACT_DIR
+      - bridge-status.json
+
+axion:verify:
+  stage: verify
+  timeout: 20m
+  when: always
+  needs:
+    - job: 'axion:evidence'
+      artifacts: true
+  script:
+    - |
+      set +e
+      npx --no-install dk verify --full --require-gates --json > dk-report.json
+      code=$?
+      set -e
+      cat dk-report.json
+      exit "$code"
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - $AXION_BRIDGE_ARTIFACT_DIR
+      - bridge-status.json
+      - dk-report.json
+
+axion:publish:
+  stage: publish
+  timeout: 10m
+  needs: ['axion:verify']
+  rules:
+    - if: '$AXION_BRIDGE_PUBLISH == "true" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"'
+      when: on_success
+    - when: never
+  script:
+    # GitLab publishes only to configured webhook/custom sinks. The built-in
+    # GitHub Checks sink requires a complete GitHub Actions environment.
+    - |
+      set +e
+      bash -euo pipefail -c "$AXION_BRIDGE_PRE_SYNC_COMMAND"
+      producer_code=$?
+      publish_code=0
+      if [ "$producer_code" -eq 0 ]; then
+        npx --no-install dk bridge sync --publish
+        publish_code=$?
+      fi
+      npx --no-install dk bridge status --require-sinks --json > bridge-publish-status.json
+      status_code=$?
+      set -e
+      cat bridge-publish-status.json
+      for code in "$producer_code" "$publish_code" "$status_code"; do
+        if [ "$code" -ne 0 ]; then
+          exit "$code"
+        fi
+      done
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - $AXION_BRIDGE_ARTIFACT_DIR
+      - bridge-publish-status.json

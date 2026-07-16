@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞（勿開公開 issue）
+    url: https://github.com/fingertipshq/axion-designer/blob/main/SECURITY.md
+    about: 請依 SECURITY.md 使用 private vulnerability reporting。
+  - name: 貢獻指南
+    url: https://github.com/fingertipshq/axion-designer/blob/main/CONTRIBUTING.md
+    about: 開發、測試與規則提案要求。

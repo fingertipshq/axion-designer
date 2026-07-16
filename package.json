@@ -1,0 +1,177 @@
+{
+  "name": "axion-designer",
+  "version": "1.0.0",
+  "type": "module",
+  "types": "./index.d.ts",
+  "description": "Code-first AI UI art direction, App Proof, Taste Lock, Studio inspection, and tamper-evident design-toolchain evidence federation.",
+  "author": "Axion Designer contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fingertipshq/axion-designer.git"
+  },
+  "homepage": "https://github.com/fingertipshq/axion-designer",
+  "bugs": {
+    "url": "https://github.com/fingertipshq/axion-designer/issues"
+  },
+  "keywords": [
+    "design-tokens",
+    "design-system",
+    "design-quality",
+    "ai-ui-design",
+    "art-direction",
+    "taste-lock",
+    "anti-slop",
+    "dtcg",
+    "css",
+    "linter",
+    "tokens",
+    "wcag",
+    "apca",
+    "contrast",
+    "sarif",
+    "cli",
+    "mcp",
+    "storybook",
+    "figma",
+    "design-governance",
+    "codex",
+    "codex-skill",
+    "screenshot-to-code",
+    "design-intelligence"
+  ],
+  "engines": {
+    "node": ">=18.14.1"
+  },
+  "bin": {
+    "dk": "bin/dk.mjs",
+    "dk-mcp": "bin/dk-mcp.mjs"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs"
+    },
+    "./bin": "./bin/dk.mjs",
+    "./mcp": {
+      "types": "./src/mcp/index.d.ts",
+      "import": "./src/mcp/index.mjs"
+    },
+    "./codex": {
+      "types": "./src/codex/index.d.ts",
+      "import": "./src/codex/index.mjs"
+    },
+    "./claude": {
+      "types": "./src/claude/index.d.ts",
+      "import": "./src/claude/index.mjs"
+    },
+    "./intelligence": {
+      "types": "./src/intelligence/index.d.ts",
+      "import": "./src/intelligence/index.mjs"
+    },
+    "./reference": {
+      "types": "./src/reference/index.d.ts",
+      "import": "./src/reference/index.mjs"
+    },
+    "./bridge": {
+      "types": "./src/bridge/index.d.ts",
+      "import": "./src/bridge/index.mjs"
+    },
+    "./schema": "./dk.schema.json",
+    "./bridge-schema": "./bridge.schema.json",
+    "./direction-schema": "./direction.schema.json",
+    "./reference-schema": "./reference.schema.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin",
+    "src",
+    "data",
+    "scripts",
+    "tests",
+    "gates",
+    "design",
+    "styles",
+    "index.mjs",
+    "index.d.ts",
+    "dk.schema.json",
+    "bridge.schema.json",
+    "direction.schema.json",
+    "reference.schema.json",
+    "dk.config.mjs",
+    "playwright.config.mjs",
+    ".stylelintrc.json",
+    "templates/scaffold",
+    "templates/integrations",
+    ".codex-plugin",
+    ".mcp.json",
+    "skills/dk-design",
+    "skills/dk-design-claude",
+    "evals/codex",
+    "docs",
+    "DESIGN.md",
+    "CHANGELOG.md",
+    "README.md",
+    "README.zh-TW.md",
+    "action.yml",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dk": "node bin/dk.mjs",
+    "mcp": "node bin/dk-mcp.mjs",
+    "tokens:build": "node bin/dk.mjs build",
+    "tokens:check": "node bin/dk.mjs build --check",
+    "tokens:contract": "node bin/dk.mjs verify --gate contract",
+    "lint:slop": "node bin/dk.mjs verify --gate slop",
+    "lint:css": "stylelint \"templates/**/*.html\" \"styles/**/*.css\" --ignore-pattern styles/tokens.css",
+    "test:a11y": "playwright test gates/a11y.spec.mjs",
+    "test:visual": "playwright test gates/visual.spec.mjs",
+    "verify": "node bin/dk.mjs verify",
+    "verify:full": "node bin/dk.mjs verify --full",
+    "studio": "node bin/dk.mjs studio",
+    "system:graph": "node bin/dk.mjs system --json",
+    "demo": "node scripts/market-demo.mjs",
+    "test:p0": "node tests/p0-gates.mjs",
+    "test:proof": "node tests/app-proof.mjs",
+    "test:studio": "node tests/studio-system.mjs && node tests/studio-bridge-consistency.mjs && node tests/studio-reference-system.mjs",
+    "test:intelligence": "node tests/intelligence-system.mjs",
+    "test:reference": "node tests/reference-system.mjs && node tests/reference-cli-system.mjs",
+    "test:hardening": "node tests/p3-hardening.mjs",
+    "test:mcp": "node tests/mcp-server.mjs",
+    "test:codex:integration": "node tests/codex-integration.mjs",
+    "test:codex:contract": "node tests/codex-contract.mjs",
+    "test:codex:pack": "node tests/codex-pack-consumer.mjs",
+    "eval:codex": "node scripts/eval-codex-traces.mjs",
+    "test:codex": "npm run test:codex:integration && npm run test:codex:contract && npm run test:codex:pack && npm run eval:codex",
+    "build:claude-skill": "node scripts/build-claude-skill.mjs",
+    "test:claude": "node tests/claude-integration.mjs",
+    "test:action": "node tests/action-system.mjs",
+    "test:bridge": "node tests/bridge-core.mjs && node tests/bridge-adapters.mjs && node tests/bridge-system.mjs",
+    "typecheck": "tsc --noEmit --strict --module NodeNext --moduleResolution NodeNext --target ES2022 tests/types-smoke.ts",
+    "test:p3": "npm run typecheck && npm run test:intelligence && npm run test:reference && node tests/p3-governance.mjs && node tests/p3-hardening.mjs && node tests/bridge-core.mjs && node tests/bridge-adapters.mjs && node tests/bridge-system.mjs && node tests/action-system.mjs && npm run test:studio && node tests/p3-benchmark.mjs && npm run test:mcp && npm run test:codex && npm run test:claude",
+    "test:p3:product": "npm run test:p3 && npm run check:package",
+    "benchmark:p3": "node scripts/p3-benchmark.mjs",
+    "check:package": "node scripts/validate-package.mjs",
+    "check:release-identity": "node scripts/validate-release-identity.mjs",
+    "test": "node tests/self-test.mjs && node tests/app-proof.mjs",
+    "self-test": "node tests/self-test.mjs",
+    "prepublishOnly": "npm test && npm run test:p0 && npm run test:p3 && npm run benchmark:p3 && npm run demo && npm run check:package && npm run check:release-identity"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@playwright/test": "^1.48.0",
+    "ajv": "^8.20.0",
+    "postcss-html": "^1.7.0",
+    "stylelint": "^16.10.0",
+    "stylelint-declaration-strict-value": "1.10.6",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "acorn": "8.17.0",
+    "zod": "^4.4.3"
+  }
+}

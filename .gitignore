@@ -1,0 +1,26 @@
+# Dependencies and local state
+node_modules/
+.dk/
+.env
+.env.*
+!.env.example
+
+# Test and browser output
+test-results/
+playwright-report/
+.playwright-cli/
+*-snapshots/
+coverage/
+
+# Local packaging and marketing renders
+*.tgz
+promo/
+
+# Local reports and regenerated demo evidence
+output/
+dk-report.html
+dk-report.sarif
+*.log
+
+# OS metadata
+.DS_Store

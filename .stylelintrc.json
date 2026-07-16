@@ -1,0 +1,15 @@
+{
+  "customSyntax": "postcss-html",
+  "plugins": ["stylelint-declaration-strict-value"],
+  "rules": {
+    "color-no-hex": true,
+    "color-named": "never",
+    "scale-unlimited/declaration-strict-value": [
+      ["/color/", "fill", "stroke", "background", "background-color", "border-color", "box-shadow", "outline-color"],
+      {
+        "ignoreValues": ["transparent", "currentColor", "inherit", "none", "unset", "initial"],
+        "message": "禁止寫死顏色/陰影：請用 var(--token)（SSOT = design/tokens.json）"
+      }
+    ]
+  }
+}

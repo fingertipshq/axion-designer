@@ -1,0 +1,50 @@
+{
+  "schema": "axion-codex-trace/v1",
+  "caseId": "verify-running-app-proof",
+  "activation": "explicit",
+  "lane": "verify",
+  "workspace": "/workspace/project",
+  "commands": [
+    {
+      "command": "node /plugin/skills/dk-design/scripts/preflight.mjs --cwd /workspace/project",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs proof --app http://127.0.0.1:4173 --routes auto",
+      "exitCode": 0
+    },
+    {
+      "command": "node /plugin/bin/dk.mjs verify --summary",
+      "exitCode": 0
+    }
+  ],
+  "writes": [
+    {
+      "path": ".dk/proof/app-proof.json",
+      "kind": "update"
+    },
+    {
+      "path": ".dk/report.json",
+      "kind": "update"
+    }
+  ],
+  "mutations": [
+    {
+      "kind": "generated-evidence",
+      "summary": "Captured complete route-state-viewport-theme App Proof and its verification ledger."
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "app-proof",
+      "status": "passed",
+      "artifact": ".dk/proof/app-proof.json"
+    },
+    {
+      "kind": "verify",
+      "status": "passed",
+      "artifact": ".dk/report.json"
+    }
+  ],
+  "finalStatus": "passed"
+}

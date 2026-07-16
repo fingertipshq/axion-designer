@@ -1,0 +1,160 @@
+# Copy to .github/workflows/axion-bridge.yml.
+# Assumes axion-designer is pinned in devDependencies and design/bridge.json is reviewed.
+# Publishing is disabled unless the repository or organization Actions variable
+# AXION_BRIDGE_PUBLISH is set to the exact string "true".
+name: axion-bridge
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: axion-bridge-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Keep both paths aligned with bridge.artifactDir when using a non-default path.
+      AXION_BRIDGE_ARTIFACT_DIR: .dk/bridge
+      AXION_BRIDGE_LEDGER: .dk/bridge/ledger.json
+      # Fork pull requests do not receive these secrets. Required secret-backed
+      # connections therefore fail closed; split public and trusted manifests if needed.
+      FIGMA_ACCESS_TOKEN: ${{ github.event_name == 'push' && secrets.FIGMA_ACCESS_TOKEN || '' }}
+      AXION_WEBHOOK_ENDPOINT: ${{ github.event_name == 'push' && secrets.AXION_WEBHOOK_ENDPOINT || '' }}
+      AXION_WEBHOOK_TOKEN: ${{ github.event_name == 'push' && secrets.AXION_WEBHOOK_TOKEN || '' }}
+      CHROMATIC_BUILD_URL: ${{ vars.CHROMATIC_BUILD_URL }}
+      CHROMATIC_BUILD_STATUS: ${{ vars.CHROMATIC_BUILD_STATUS }}
+      CHROMATIC_BUILD_NUMBER: ${{ vars.CHROMATIC_BUILD_NUMBER }}
+      CHROMATIC_COMMIT: ${{ github.sha }}
+      # Set this trusted Actions variable when Bridge reads generated local files,
+      # for example: npm run build-storybook. The safe default is a shell no-op.
+      AXION_BRIDGE_PRE_SYNC_COMMAND: ${{ vars.AXION_BRIDGE_PRE_SYNC_COMMAND || ':' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          # PR code may load dk.config.mjs/custom adapters; do not persist the token.
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npx --no-install dk bridge doctor
+      - name: Produce or restore local Bridge sources
+        shell: bash
+        run: bash -euo pipefail -c "$AXION_BRIDGE_PRE_SYNC_COMMAND"
+      - run: npx --no-install dk bridge sync
+
+      - name: Audit Bridge ledger
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          npx --no-install dk bridge status --json > bridge-status.json
+          code=$?
+          set -e
+          cat bridge-status.json
+          exit "$code"
+
+      - name: Run full Axion policy
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          npx --no-install dk verify --full --require-gates --json > dk-report.json
+          code=$?
+          set -e
+          cat dk-report.json
+          exit "$code"
+
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: axion-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: warn
+          # .dk is intentionally hidden and contains only Bridge machine evidence.
+          include-hidden-files: true
+          retention-days: 14
+          path: |
+            ${{ env.AXION_BRIDGE_ARTIFACT_DIR }}
+            bridge-status.json
+            dk-report.json
+
+  publish:
+    # External sinks require an explicit opt-in and a trusted push after verification.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AXION_BRIDGE_PUBLISH == 'true'
+    needs: evidence-and-verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      checks: write
+    env:
+      # Keep both paths aligned with bridge.artifactDir when using a non-default path.
+      AXION_BRIDGE_ARTIFACT_DIR: .dk/bridge
+      AXION_BRIDGE_LEDGER: .dk/bridge/ledger.json
+      GITHUB_TOKEN: ${{ github.token }}
+      FIGMA_ACCESS_TOKEN: ${{ secrets.FIGMA_ACCESS_TOKEN }}
+      AXION_WEBHOOK_ENDPOINT: ${{ secrets.AXION_WEBHOOK_ENDPOINT }}
+      AXION_WEBHOOK_TOKEN: ${{ secrets.AXION_WEBHOOK_TOKEN }}
+      CHROMATIC_BUILD_URL: ${{ vars.CHROMATIC_BUILD_URL }}
+      CHROMATIC_BUILD_STATUS: ${{ vars.CHROMATIC_BUILD_STATUS }}
+      CHROMATIC_BUILD_NUMBER: ${{ vars.CHROMATIC_BUILD_NUMBER }}
+      CHROMATIC_COMMIT: ${{ github.sha }}
+      AXION_BRIDGE_PRE_SYNC_COMMAND: ${{ vars.AXION_BRIDGE_PRE_SYNC_COMMAND || ':' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # GITHUB_TOKEN is passed explicitly to the publisher; git does not need it.
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Publish and verify sink receipts
+        shell: bash
+        run: |
+          set +e
+          bash -euo pipefail -c "$AXION_BRIDGE_PRE_SYNC_COMMAND"
+          producer_code=$?
+          publish_code=0
+          if [ "$producer_code" -eq 0 ]; then
+            npx --no-install dk bridge sync --publish
+            publish_code=$?
+          fi
+          npx --no-install dk bridge status --require-sinks --json > bridge-publish-status.json
+          status_code=$?
+          set -e
+          cat bridge-publish-status.json
+          for code in "$producer_code" "$publish_code" "$status_code"; do
+            if [ "$code" -ne 0 ]; then
+              exit "$code"
+            fi
+          done
+
+      - name: Preserve publish evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: axion-publish-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: warn
+          # .dk is intentionally hidden and contains only Bridge machine evidence.
+          include-hidden-files: true
+          retention-days: 14
+          path: |
+            ${{ env.AXION_BRIDGE_ARTIFACT_DIR }}
+            bridge-publish-status.json

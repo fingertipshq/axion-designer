@@ -1,0 +1,7 @@
+interface:
+  display_name: "Axion Designer for Codex"
+  short_description: "Art-direct, build, inspect, and prove production Web UI."
+  default_prompt: "Use $dk-design to art-direct or reconstruct this Web UI in the real repository, inspect mobile and desktop pixels, and prove the result without weakening policy."
+
+policy:
+  allow_implicit_invocation: false

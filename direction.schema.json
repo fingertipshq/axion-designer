@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unpkg.com/axion-designer/direction.schema.json",
+  "title": "dk design direction",
+  "description": "A compact, machine-checkable identity contract for AI-built interfaces.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "status", "name", "context", "identity", "bindings"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema": { "const": "dk-direction/v2" },
+    "status": { "enum": ["draft", "approved"] },
+    "name": { "$ref": "#/$defs/name" },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["register", "product", "audience", "task", "action", "constraints"],
+      "properties": {
+        "register": { "enum": ["brand", "product"] },
+        "product": { "$ref": "#/$defs/rule" },
+        "audience": { "allOf": [{ "$ref": "#/$defs/list" }, { "minItems": 1, "maxItems": 3 }] },
+        "task": { "$ref": "#/$defs/rule" },
+        "action": { "$ref": "#/$defs/rule" },
+        "constraints": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/rule" }
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "thesis", "qualities", "signature", "composition", "responsive",
+        "typography", "color", "form", "motion", "media", "avoid"
+      ],
+      "properties": {
+        "thesis": { "$ref": "#/$defs/rule" },
+        "qualities": { "allOf": [{ "$ref": "#/$defs/list" }, { "minItems": 3, "maxItems": 5 }] },
+        "signature": { "$ref": "#/$defs/rule" },
+        "composition": { "$ref": "#/$defs/rule" },
+        "responsive": { "$ref": "#/$defs/rule" },
+        "typography": { "$ref": "#/$defs/rule" },
+        "color": { "$ref": "#/$defs/rule" },
+        "form": { "$ref": "#/$defs/rule" },
+        "motion": { "$ref": "#/$defs/rule" },
+        "media": { "$ref": "#/$defs/rule" },
+        "avoid": { "allOf": [{ "$ref": "#/$defs/list" }, { "minItems": 2, "maxItems": 5 }] }
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "minProperties": 4,
+      "maxProperties": 12,
+      "propertyNames": { "type": "string", "minLength": 2 },
+      "additionalProperties": { "type": "string", "minLength": 3, "maxLength": 120 }
+    }
+  },
+  "$defs": {
+    "name": { "type": "string", "minLength": 4, "maxLength": 80 },
+    "rule": { "type": "string", "minLength": 3, "maxLength": 240 },
+    "list": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 2, "maxLength": 240 }
+    }
+  }
+}

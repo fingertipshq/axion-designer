@@ -1,0 +1,4 @@
+/* 數值正規化應視 .5rem 與 0.5rem、16.0px 與 16px 為等價；.7rem 仍是 off-scale。 */
+.a { padding: .5rem; }   /* ≡ 0.5rem，在 scale → 不該報 */
+.b { margin: 16.0px; }   /* ≡ 16px，在 scale → 不該報 */
+.c { gap: .7rem; }       /* 0.7rem 不在 scale → 應報 */

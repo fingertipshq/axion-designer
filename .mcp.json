@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "axion-design-intelligence": {
+      "command": "node",
+      "args": ["./bin/dk-mcp.mjs", "--intelligence-only"],
+      "cwd": ".",
+      "tool_timeout_sec": 30
+    }
+  }
+}

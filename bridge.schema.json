@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unpkg.com/axion-designer/bridge.schema.json",
+  "title": "Axion Bridge connections",
+  "description": "Portable, repository-owned connection manifest. Provider credentials must be referenced by environment-variable name in options and are never stored here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "connections"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema": { "const": "axion-bridge-config/v1" },
+    "connections": {
+      "type": "array",
+      "maxItems": 100,
+      "items": { "$ref": "#/$defs/connection" }
+    }
+  },
+  "$defs": {
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "adapter"],
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$" },
+        "adapter": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Built-in adapter id (artifact, chromatic, figma, github, preview, storybook, webhook) or the id exported by an explicit custom module."
+        },
+        "role": { "enum": ["source", "sink", "both"], "default": "source" },
+        "enabled": { "type": "boolean", "default": true },
+        "required": { "type": "boolean", "default": false },
+        "trust": { "enum": ["untrusted", "linked", "verified"], "default": "linked" },
+        "source": { "type": "string", "minLength": 1 },
+        "module": { "type": "string", "minLength": 1 },
+        "permissions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true,
+          "default": []
+        },
+        "options": {
+          "type": "object",
+          "description": "Adapter-specific non-secret options. Use tokenEnv/secretEnv fields to name environment variables.",
+          "default": {}
+        }
+      }
+    }
+  }
+}

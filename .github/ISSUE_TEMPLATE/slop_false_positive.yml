@@ -1,0 +1,41 @@
+name: Slop 誤報
+description: 某條規則罰了可溯源的真值 / 合法用法
+labels: ["false-positive", "slop"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        誤報直接侵蝕產品可信度，我們認真處理。規則自稱「請用可溯源真值」卻誤罰最可溯源的
+        精確數字／價格／年份／解析度／fallback 字型——那是不可辯護的，請幫我們收斂。
+  - type: input
+    id: rule-id
+    attributes:
+      label: 規則 id
+      placeholder: "slop/vanity-number · slop/ai-font · slop/hardcoded-color …"
+    validations:
+      required: true
+  - type: textarea
+    id: false-positive
+    attributes:
+      label: 被誤罰的程式碼（正面例：應放行卻被抓）
+      description: 一行即可。這會變成收斂後的正面 fixture。
+      placeholder: "font-family: 'Söhne', Arial, sans-serif;  /* Arial 只是 fallback */"
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: still-catch
+    attributes:
+      label: 仍該被抓的相近寫法（反面例）
+      description: 幫我們別在收斂時把真 slop 一起放過。這會保留為反面 fixture。
+      placeholder: "font-family: Inter;  /* 首位就是 AI 預設字型——這仍該被抓 */"
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: 為什麼這是誤報
+      description: 一句話——為什麼正面例是可溯源／刻意的合法用法
+    validations:
+      required: true

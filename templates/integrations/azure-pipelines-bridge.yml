@@ -1,0 +1,168 @@
+# Public/local source-only use needs no variable group. To enable secret-backed adapters,
+# create/authorize `axion-bridge-secrets`, uncomment its line below, and add only
+# the needed secrets. Publishing also requires AXION_BRIDGE_PUBLISH="true" there.
+# Pin axion-designer in devDependencies; do not execute untrusted fork code with secrets.
+# Azure publishes only to configured webhook/custom sinks. The built-in GitHub
+# Checks sink requires a complete GitHub Actions environment.
+trigger:
+  branches:
+    include: [main]
+
+# Secrets from the variable group are intentionally limited to trusted main
+# builds in this template. Add a separate secretless PR pipeline if every
+# required connection in its manifest is public/local.
+pr: none
+
+variables:
+  # Azure leaves an undefined $(NAME) macro unchanged. Define safe empty token
+  # values first; the following variable group overrides only secrets it contains.
+  - name: FIGMA_ACCESS_TOKEN
+    value: ''
+  - name: AXION_WEBHOOK_ENDPOINT
+    value: ''
+  - name: AXION_WEBHOOK_TOKEN
+    value: ''
+  # Optional: the group overrides only explicitly configured values.
+  - name: AXION_BRIDGE_PUBLISH
+    value: 'false'
+  # Override in trusted pipeline configuration when generated/local Bridge
+  # sources must be produced or restored in every fresh job.
+  - name: AXION_BRIDGE_PRE_SYNC_COMMAND
+    value: ':'
+  # - group: axion-bridge-secrets
+  # Keep both paths aligned with bridge.artifactDir when using a non-default path.
+  - name: AXION_BRIDGE_ARTIFACT_DIR
+    value: .dk/bridge
+  - name: AXION_BRIDGE_LEDGER
+    value: .dk/bridge/ledger.json
+
+stages:
+  - stage: Verify
+    jobs:
+      - job: AxionEvidence
+        pool:
+          vmImage: ubuntu-latest
+        timeoutInMinutes: 20
+        steps:
+          - checkout: self
+            fetchDepth: 1
+
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '20.x'
+
+          - script: npm ci
+            displayName: Install pinned dependencies
+
+          - script: npx --no-install dk bridge doctor
+            displayName: Preflight Bridge
+            env:
+              FIGMA_ACCESS_TOKEN: $(FIGMA_ACCESS_TOKEN)
+              AXION_WEBHOOK_ENDPOINT: $(AXION_WEBHOOK_ENDPOINT)
+              AXION_WEBHOOK_TOKEN: $(AXION_WEBHOOK_TOKEN)
+
+          - bash: bash -euo pipefail -c "$AXION_BRIDGE_PRE_SYNC_COMMAND"
+            displayName: Produce or restore local Bridge sources
+            env:
+              AXION_BRIDGE_PRE_SYNC_COMMAND: $(AXION_BRIDGE_PRE_SYNC_COMMAND)
+
+          - script: npx --no-install dk bridge sync
+            displayName: Collect Bridge evidence
+            env:
+              FIGMA_ACCESS_TOKEN: $(FIGMA_ACCESS_TOKEN)
+              AXION_WEBHOOK_ENDPOINT: $(AXION_WEBHOOK_ENDPOINT)
+              AXION_WEBHOOK_TOKEN: $(AXION_WEBHOOK_TOKEN)
+              CHROMATIC_COMMIT: $(Build.SourceVersion)
+
+          - bash: |
+              set +e
+              npx --no-install dk bridge status --json > bridge-status.json
+              code=$?
+              set -e
+              cat bridge-status.json
+              exit "$code"
+            displayName: Audit Bridge ledger
+            condition: succeededOrFailed()
+
+          - bash: |
+              set +e
+              npx --no-install dk verify --full --require-gates --json > dk-report.json
+              code=$?
+              set -e
+              cat dk-report.json
+              exit "$code"
+            displayName: Run full Axion policy
+            condition: succeededOrFailed()
+
+          - bash: |
+              set -e
+              mkdir -p "$(Build.ArtifactStagingDirectory)/axion"
+              if [ -d "$AXION_BRIDGE_ARTIFACT_DIR" ]; then
+                mkdir -p "$(Build.ArtifactStagingDirectory)/axion/bridge"
+                cp -R "$AXION_BRIDGE_ARTIFACT_DIR"/. "$(Build.ArtifactStagingDirectory)/axion/bridge/"
+              fi
+              test ! -f bridge-status.json || cp bridge-status.json "$(Build.ArtifactStagingDirectory)/axion/bridge-status.json"
+              test ! -f dk-report.json || cp dk-report.json "$(Build.ArtifactStagingDirectory)/axion/dk-report.json"
+            condition: always()
+            displayName: Stage Axion evidence
+
+          - task: PublishPipelineArtifact@1
+            condition: always()
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)/axion
+              artifact: axion-evidence-$(Build.BuildId)
+              publishLocation: pipeline
+
+  - stage: Publish
+    dependsOn: Verify
+    condition: and(succeeded(), eq(variables['AXION_BRIDGE_PUBLISH'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - job: PublishBridgeSinks
+        pool:
+          vmImage: ubuntu-latest
+        timeoutInMinutes: 10
+        steps:
+          - checkout: self
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '20.x'
+          - script: npm ci
+          - bash: bash -euo pipefail -c "$AXION_BRIDGE_PRE_SYNC_COMMAND"
+            displayName: Produce or restore local Bridge sources
+            env:
+              AXION_BRIDGE_PRE_SYNC_COMMAND: $(AXION_BRIDGE_PRE_SYNC_COMMAND)
+          - script: npx --no-install dk bridge sync --publish
+            displayName: Publish to configured sinks
+            env:
+              FIGMA_ACCESS_TOKEN: $(FIGMA_ACCESS_TOKEN)
+              AXION_WEBHOOK_ENDPOINT: $(AXION_WEBHOOK_ENDPOINT)
+              AXION_WEBHOOK_TOKEN: $(AXION_WEBHOOK_TOKEN)
+              CHROMATIC_COMMIT: $(Build.SourceVersion)
+
+          - bash: |
+              set +e
+              npx --no-install dk bridge status --require-sinks --json > bridge-publish-status.json
+              code=$?
+              set -e
+              cat bridge-publish-status.json
+              exit "$code"
+            condition: succeededOrFailed()
+            displayName: Verify published sink receipts
+
+          - bash: |
+              set -e
+              mkdir -p "$(Build.ArtifactStagingDirectory)/axion-publish"
+              if [ -d "$AXION_BRIDGE_ARTIFACT_DIR" ]; then
+                mkdir -p "$(Build.ArtifactStagingDirectory)/axion-publish/bridge"
+                cp -R "$AXION_BRIDGE_ARTIFACT_DIR"/. "$(Build.ArtifactStagingDirectory)/axion-publish/bridge/"
+              fi
+              test ! -f bridge-publish-status.json || cp bridge-publish-status.json "$(Build.ArtifactStagingDirectory)/axion-publish/bridge-publish-status.json"
+            condition: always()
+            displayName: Stage Bridge publish evidence
+
+          - task: PublishPipelineArtifact@1
+            condition: always()
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)/axion-publish
+              artifact: axion-publish-evidence-$(Build.BuildId)
+              publishLocation: pipeline

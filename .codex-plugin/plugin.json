@@ -1,0 +1,38 @@
+{
+  "name": "axion-designer",
+  "version": "1.0.0",
+  "description": "Give Codex repository-aware UI intelligence, authorized reference-to-code reconstruction, real-pixel review, mechanical proof, and durable design memory.",
+  "author": {
+    "name": "Axion Designer contributors"
+  },
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Axion Designer for Codex",
+    "shortDescription": "Art-direct, reconstruct, inspect, and prove production Web UI.",
+    "longDescription": "A project-scoped Codex design layer that combines explicit-invocation art direction, offline design intelligence, authorized reference-to-code reconstruction, repository-native implementation, bounded source-backed context, real-pixel visual review, Studio comparison, fail-closed App Proof, semantic Taste Lock, MCP, and hash-chained cross-tool evidence.",
+    "developerName": "Axion Designer contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Three-direction AI UI art direction",
+      "Nine-domain offline design intelligence with stack-aware direction recipes",
+      "Authorized reference-to-code evidence chain with anti-cheat validation",
+      "Code-native frontend implementation",
+      "Studio Live Inspector and System Graph",
+      "Studio Reference overlay, scoped repair requests, Live Inspector, and System Graph",
+      "Route-state-viewport-theme App Proof",
+      "Semantic Taste Lock drift protection",
+      "Hash-chained approvals, CI reports, and drift benchmark",
+      "Axion Bridge evidence federation for Storybook, Figma, previews, GitHub, Chromatic, artifacts, and webhooks",
+      "Official MCP server for bounded agent interoperability",
+      "Project-scoped explicit activation in Codex CLI and desktop",
+      "Sub-12KB source-backed Codex design context"
+    ],
+    "defaultPrompt": [
+      "Use $dk-design to create or refine this interface in the real repository, inspect mobile and desktop pixels, and prove the result.",
+      "Use $dk-design in Explore lane to compare three structurally distinct directions before implementing and proving the strongest one.",
+      "Use $dk-design in Reconstruct lane to register these authorized references, map them onto the existing stack, implement real components, compare rendered pixels, and repair the top scoped deltas.",
+      "Use $dk-design in Verify lane to diagnose this frontend and fix deterministic findings without weakening policy or refreshing locks."
+    ]
+  }
+}
