@@ -2,9 +2,11 @@
 
 All notable user-facing changes are recorded here.
 
-## Unreleased — P3 local candidate
+## 1.0.0-beta.1 — 2026-07-16
 
-Repository-local candidate only. It has not been published, installed as a global Codex plugin, registered as a global MCP server, or added to a marketplace.
+First public beta on npm. Everything below ships in this release; the npm
+name is claimed and the core contract is stable, while distribution
+surfaces (playground, GitHub Action tag) continue to land before 1.0.0.
 
 - Added the `$dk-design` Codex workflow for UI direction, authorized reference reconstruction, implementation, rendered review, and verification, including the explicit `reconstruct` lane.
 - Added offline Design Intelligence across product, style, color, typography, layout, motion, icons, charts, and UX, with deterministic three-direction recommendations and fail-closed clarification for underspecified briefs.
