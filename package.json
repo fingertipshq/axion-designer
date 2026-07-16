@@ -166,7 +166,7 @@
     "ajv": "^8.20.0",
     "postcss-html": "^1.7.0",
     "stylelint": "^16.10.0",
-    "stylelint-declaration-strict-value": "1.10.6",
+    "stylelint-declaration-strict-value": "1.11.1",
     "typescript": "^5.8.3"
   },
   "dependencies": {
