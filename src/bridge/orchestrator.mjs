@@ -9,10 +9,9 @@
 import { createHash } from 'node:crypto';
 import { closeSync, existsSync, openSync, readFileSync, readSync, realpathSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { builtinModules } from 'node:module';
+import { builtinModules, createRequire } from 'node:module';
 import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { parse as parseJavaScript } from 'acorn';
 import { AdapterRegistry } from './registry.mjs';
 import {
   BridgeValidationError,
@@ -903,6 +902,24 @@ function packageScopeFiles(modulePath, logicalRoot) {
   }
   return files;
 }
+// acorn is loaded lazily so the zero-dependency core chain never requires it:
+// only custom-adapter static analysis parses JavaScript, and a missing
+// dependency at that point is a fail-closed finding, not a silent skip.
+let cachedAcornParse = null;
+function parseJavaScript(source, options) {
+  if (!cachedAcornParse) {
+    try {
+      cachedAcornParse = createRequire(import.meta.url)('acorn').parse;
+    } catch {
+      throw new BridgeOrchestratorError(
+        'Custom adapter analysis requires the optional "acorn" dependency; run npm install for the package that provides axion-designer.',
+        'AXION_BRIDGE_MODULE',
+      );
+    }
+  }
+  return cachedAcornParse(source, options);
+}
+
 function moduleSpecifiers(source, path) {
   if (extname(path) === '.json') return [];
   let ast;
