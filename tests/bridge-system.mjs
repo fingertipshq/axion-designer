@@ -359,6 +359,16 @@ export async function collect() {
   assert.equal(multiEnvelope.status, 'failed',
     'a passing final envelope cannot hide a failed envelope from the same collect run');
   assert(multiEnvelope.audit.issues.some((issue) => issue.connection === 'multi-main' && issue.code === 'provider-failed'));
+  // Regression: on a CI runner the ambient identity (GITHUB_SHA et al) turns
+  // into an expected-commit policy. Unbound fixture envelopes must remain
+  // admissible there — absence of a binding is not a contradiction of one.
+  const multiEnvelopeOnCi = await syncBridge(multiEnvelopeConfig, {
+    env: { GITHUB_SHA: 'a'.repeat(40), GITHUB_REPOSITORY: 'fingertipshq/axion-designer' },
+  });
+  assert.equal(multiEnvelopeOnCi.status, 'failed',
+    'ambient CI identity must not reject unbound envelopes outright');
+  assert(multiEnvelopeOnCi.audit.issues.some((issue) => issue.connection === 'multi-main' && issue.code === 'provider-failed'),
+    'CI identity keeps the same failed-envelope aggregation semantics as a local run');
   put(roleProject, 'multi-statuses.mjs', `export const statuses = ['failed', 'passed']; // implementation revision`);
   assert(auditBridge(multiEnvelopeConfig).issues.some((issue) => issue.connection === 'multi-main' && issue.code === 'contract-mismatch'),
     'changing a local transitive adapter dependency invalidates evidence from the old module graph');

@@ -9,6 +9,13 @@ import { collectStudioReferenceState, collectStudioSnapshot } from '../src/studi
 import { startStudio } from '../src/studio/server.mjs';
 import { writeTrustedAppProofFixture } from './reference-proof-fixture.mjs';
 
+// Times are anchored to the real clock (offsets preserved) so the fixture's
+// pinned artifact times and the indexer's REAL file mtimes stay in the same
+// era forever. An absolute wall-clock literal here is a time bomb: the suite
+// passes until that instant and fails permanently afterwards.
+const CLOCK_BASE = Date.now() - 30 * 60_000;
+const atOffset = (minutes) => new Date(CLOCK_BASE + minutes * 60_000).toISOString();
+
 const root = mkdtempSync(join(tmpdir(), 'axion-studio-reference-'));
 const outside = join(dirname(root), `axion-reference-outside-${Date.now()}.png`);
 const referenceBytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
@@ -32,14 +39,14 @@ try {
 
   let clockTick = 0;
   const referenceSystem = createReferenceSystem(root, {
-    clock: () => new Date(Date.parse('2026-07-16T01:00:00.000Z') + clockTick++ * 60_000),
+    clock: () => new Date(CLOCK_BASE + clockTick++ * 60_000),
   });
   const manifestResult = referenceSystem.registerReferences([{
     id: 'checkout-mobile',
     path: 'fixtures/checkout-reference.png',
     provenance: {
       type: 'user-provided', source: 'Internal checkout design brief',
-      capturedAt: '2026-07-16T00:55:00.000Z', author: 'Design team', notes: 'Approved mobile reference.',
+      capturedAt: atOffset(-5), author: 'Design team', notes: 'Approved mobile reference.',
     },
     licence: {
       status: 'owned', identifier: 'internal-owned', termsUrl: null,
@@ -137,7 +144,7 @@ try {
   assert(!JSON.stringify(surface.items[0].capture).includes('.dk/proof/'), 'Studio omits App Proof filesystem paths');
   assert(!JSON.stringify(surface.items[0].capture).includes('.dk/report.json'), 'Studio omits ledger filesystem paths');
 
-  const snapshot = await collectStudioSnapshot(root, { now: '2026-07-16T01:03:00.000Z' });
+  const snapshot = await collectStudioSnapshot(root, { now: atOffset(3) });
   assert.equal(snapshot.reference.status, 'ready');
   assert.equal(snapshot.reference.pairedCount, 1);
 
@@ -168,8 +175,8 @@ try {
     state: 'ready',
     theme: 'light',
     screenshotBytes: candidateBytes,
-    sourcePaths: ['index.html'],
-    startedAt: '2026-07-16T01:04:00.000Z',
+    sourcePaths: ['index.html', 'design/tokens.json'],
+    startedAt: atOffset(4),
   });
   const attestedComparison = referenceSystem.compareReference({
     referenceId: 'checkout-mobile',
