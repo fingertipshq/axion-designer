@@ -113,6 +113,28 @@ ok(!html.includes('全數通過') && !html.includes('All passed'),
   'HTML does not claim all passed');
 const json = JSON.parse(renderJson(incomplete, { presetName: 'recommended' }));
 eq(json.status, 'incomplete', 'JSON exposes the run status');
+
+// The zh surfaces honor the same contract: an incomplete run may not contain
+// the literal success marker anywhere — not even inside a negation — because
+// humans and scripts grep terminals for that exact phrase. CI runs in an
+// English locale, so this is exercised through an explicit zh subprocess.
+{
+  const zhProbe = spawnSync(process.execPath, ['--input-type=module', '-e', `
+    import { renderTerminal, renderHtml } from ${JSON.stringify(new URL('../src/core/report.mjs', import.meta.url).href)};
+    const incomplete = ${JSON.stringify(incomplete)};
+    const terminal = renderTerminal(incomplete, { presetName: 'recommended' }, { color: false });
+    const html = renderHtml(incomplete, { presetName: 'recommended' });
+    if (terminal.includes('全數通過') || html.includes('全數通過')) {
+      console.error('zh incomplete surface leaks the success marker');
+      process.exit(1);
+    }
+    if (!terminal.includes('管線未完成')) {
+      console.error('zh terminal must identify the incomplete pipeline');
+      process.exit(1);
+    }
+  `], { encoding: 'utf8', env: { ...process.env, DK_LANG: 'zh-TW' } });
+  eq(zhProbe.status, 0, `zh incomplete surfaces ban the success marker${zhProbe.stderr ? ` — ${zhProbe.stderr.trim()}` : ''}`);
+}
 eq(json.gates[0].blocking, true, 'JSON exposes blocking skip metadata');
 
 // Generated CSS must reject structural injection without narrowing legitimate

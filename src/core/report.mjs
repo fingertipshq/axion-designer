@@ -211,7 +211,7 @@ export function renderTerminal(result, config, opts = {}) {
       '管線未完成 — 0 errors, 0 warnings（至少一道要求的關卡未能執行）',
       'Pipeline incomplete — 0 errors, 0 warnings (at least one requested gate could not run)')) + heavyNote);
     L.push('  ' + c.dim(pick(
-      `${view.filesScanned} 檔已掃 · 本次結果不是「全數通過」 · tokenHash ${terminalText(short(source.tokenHash))}`,
+      `${view.filesScanned} 檔已掃 · 本次結果並未全部通過 · tokenHash ${terminalText(short(source.tokenHash))}`,
       `${view.filesScanned} files scanned · this result is not an all-pass · tokenHash ${terminalText(short(source.tokenHash))}`)) + supNote);
   } else if (error + warn + info === 0) {
     L.push('  ' + c.green(`${ICON.ok} ` + pick('全數通過 — 0 errors, 0 warnings', 'All passed — 0 errors, 0 warnings')) + heavyNote);
@@ -508,7 +508,7 @@ export function renderHtml(result, config) {
   const styleHash = createHash('sha256').update(REPORT_CSS).digest('base64');
   const csp = `default-src 'none'; script-src 'none'; style-src 'sha256-${styleHash}'; style-src-attr 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'`;
   const emptyMessage = status === 'incomplete'
-    ? pick('沒有 Finding，但至少一道要求的關卡未完成；這不是全數通過。', 'No findings, but at least one requested gate was incomplete; this is not an all-pass.')
+    ? pick('沒有 Finding，但至少一道要求的關卡未完成；這不算全部通過。', 'No findings, but at least one requested gate was incomplete; this is not an all-pass.')
     : pick('沒有 Finding — 這條鏈在你的使用者之前就把關了。', 'No findings — the chain caught them before your users did.');
 
   return `<!doctype html>
