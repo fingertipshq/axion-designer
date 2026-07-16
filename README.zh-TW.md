@@ -217,4 +217,6 @@ SARIF、code scanning、review comment、machine summary 與 CI 順序見[整合
 - [貢獻指南](CONTRIBUTING.md)
 - [安全政策](SECURITY.md)
 
+Axion Designer 是 FingerTips 專案，開發過程由 OpenAI Codex 與 Anthropic Claude 兩個 agent 協作完成。
+
 MIT 授權，見 [LICENSE](LICENSE)。

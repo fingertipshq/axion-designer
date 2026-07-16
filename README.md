@@ -219,4 +219,6 @@ See [Integrations](docs/integrations.md) for SARIF, code scanning, review commen
 - [Contributing](CONTRIBUTING.md)
 - [Security](SECURITY.md)
 
+Axion Designer is a FingerTips project, engineered with OpenAI Codex and Anthropic Claude as development agents.
+
 MIT licensed. See [LICENSE](LICENSE).
