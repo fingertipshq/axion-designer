@@ -165,7 +165,7 @@
     "@playwright/test": "^1.48.0",
     "ajv": "^8.20.0",
     "postcss-html": "^1.7.0",
-    "stylelint": "^16.10.0",
+    "stylelint": "^17.14.0",
     "stylelint-declaration-strict-value": "1.10.6",
     "typescript": "^5.8.3"
   },
