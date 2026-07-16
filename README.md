@@ -31,6 +31,8 @@ Most AI UI workflows end after code generation. `Axion Designer` continues throu
 
 Run `npm run demo` to reproduce the CLI proof in a temporary workspace. It introduces one exact token violation, captures the failing reports, applies the SSOT-backed repair, and proves the source returns byte-for-byte to a passing state. The evidence bundle is written to `output/market-demo/`.
 
+Prefer video? Watch Axion [design its own launch page and catch its own contrast violations](https://youtu.be/DqWigIbwAy8) (31 s), or [turn silent UI drift into a build failure](https://youtu.be/gcnKh50jRuk) (31 s).
+
 ## Quick start
 
 There are three dependency layers:

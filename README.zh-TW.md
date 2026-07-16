@@ -31,6 +31,8 @@
 
 執行 `npm run demo` 可以重現 CLI 證明：它會在暫存工作區注入一個精確的 token 違規，保存失敗報告，套用唯一可確定的 SSOT 修正，最後證明原始碼逐 byte 回到通過狀態。證據包會寫入 `output/market-demo/`。
 
+想直接看影片？31 秒看 Axion [設計自己的官網並抓到自己的對比違規](https://youtu.be/DqWigIbwAy8)，或看 [悄悄走樣的 UI 變成建置失敗](https://youtu.be/gcnKh50jRuk)。
+
 ## 快速開始
 
 依賴分成三層：
