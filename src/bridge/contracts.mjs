@@ -247,11 +247,19 @@ function applyEnvelopePolicy(envelope, policy, issues) {
     if (!BRIDGE_TRUST_LEVELS.includes(minimumTrust)) push(issues, '$policy.minimumTrust', 'trust', 'Unknown minimum trust level.');
     else if (trustRank(envelope.trust?.level) < trustRank(minimumTrust)) push(issues, '$.trust.level', 'insufficient-trust', `Envelope trust is below ${minimumTrust}.`);
   }
+  // Binding policy separates absence from contradiction. An unbound envelope
+  // stays admissible (its trust level already grades it); a binding that names
+  // a DIFFERENT commit or repository is evidence from somewhere else and is
+  // rejected. Connections that must not accept unbound evidence opt in via
+  // requireCommit / requireRepository.
   if (policy.requireCommit && !envelope.binding?.commit) push(issues, '$.binding.commit', 'commit-required', 'A commit binding is required.');
-  if (policy.expectedCommit != null && envelope.binding?.commit !== String(policy.expectedCommit).toLowerCase()) {
+  if (policy.requireRepository && !envelope.binding?.repository) push(issues, '$.binding.repository', 'repository-required', 'A repository binding is required.');
+  if (policy.expectedCommit != null && envelope.binding?.commit != null
+    && envelope.binding.commit !== String(policy.expectedCommit).toLowerCase()) {
     push(issues, '$.binding.commit', 'commit-mismatch', `Expected commit ${policy.expectedCommit}.`);
   }
-  if (policy.expectedRepository != null && envelope.binding?.repository !== policy.expectedRepository) {
+  if (policy.expectedRepository != null && envelope.binding?.repository != null
+    && envelope.binding.repository !== policy.expectedRepository) {
     push(issues, '$.binding.repository', 'repository-mismatch', `Expected repository ${policy.expectedRepository}.`);
   }
   if (Array.isArray(policy.allowedProviders) && !policy.allowedProviders.includes(envelope.provider)) {

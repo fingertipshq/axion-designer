@@ -121,6 +121,21 @@ test('integration envelopes enforce digest, trust, freshness, commit, and permis
   const weak = envelope({ trust: { level: 'untrusted', issuer: 'fixture', evidence: [] } });
   assert(validateIntegrationEnvelope(weak, { minimumTrust: 'self-attested' }).some((item) => item.code === 'insufficient-trust'));
   assert(validateIntegrationEnvelope(value, { requiredPermissions: ['fixture:write'] }).some((item) => item.code === 'permission-missing'));
+
+  // Absence is not contradiction: an unbound envelope survives an ambient
+  // expected identity (the exact situation of every CI runner with
+  // GITHUB_SHA set), while a DIFFERENT binding is still rejected and the
+  // require* knobs make binding mandatory when a connection opts in.
+  const unbound = envelope({ binding: { repository: null, commit: null } });
+  assert.equal(validateIntegrationEnvelope(unbound, {
+    expectedCommit: COMMIT, expectedRepository: 'fixture/repo',
+  }).length, 0);
+  assert(validateIntegrationEnvelope(value, { expectedRepository: 'other/repo' })
+    .some((item) => item.code === 'repository-mismatch'));
+  assert(validateIntegrationEnvelope(unbound, { requireCommit: true })
+    .some((item) => item.code === 'commit-required'));
+  assert(validateIntegrationEnvelope(unbound, { requireRepository: true })
+    .some((item) => item.code === 'repository-required'));
 });
 
 test('registry rejects duplicate providers and lifecycle/implementation mismatch', () => {
