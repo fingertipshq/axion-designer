@@ -1,6 +1,6 @@
 {
   "name": "axion-designer",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "Give Codex repository-aware UI intelligence, authorized reference-to-code reconstruction, real-pixel review, mechanical proof, and durable design memory.",
   "author": {
     "name": "Axion Designer contributors"
